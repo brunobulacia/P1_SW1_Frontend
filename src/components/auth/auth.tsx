@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,8 @@ import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { toast } from "sonner";
 import { LoginData, RegisterData } from "@/types/auth/auth";
 import { loginApi, registerApi } from "@/api/auth";
+import { useRouter } from "next/navigation";
+import { routerServerGlobal } from "next/dist/server/lib/router-utils/router-server-context";
 
 interface LoginFormData extends LoginData {}
 
@@ -27,6 +29,7 @@ interface RegisterFormData extends RegisterData {
 export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const router = useRouter();
 
   const {
     register: loginRegister,
@@ -46,6 +49,7 @@ export default function AuthPage() {
       const response = await loginApi(data);
       toast.success("Inicio de sesión exitoso");
       console.log("Login response:", response);
+      router.push("/home");
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Error al iniciar sesión");
     }
@@ -58,6 +62,7 @@ export default function AuthPage() {
       const response = await registerApi(registerData);
       toast.success("Registro exitoso");
       console.log("Register response:", response);
+      router.push("/home");
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Error al registrar");
     }
