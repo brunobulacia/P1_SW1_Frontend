@@ -165,20 +165,18 @@ export function TextUpdaterNode(prop: any) {
   return (
     <>
       <div 
-        className={`${nodeData.isAssociationClass ? 'bg-blue-50 border-blue-600 border-dashed' : 'bg-white border-gray-800'} shadow-lg border-2 min-w-[250px] max-w-[350px] font-mono text-sm cursor-pointer transition-all duration-200 ${
+        className={`bg-white border-gray-800 shadow-lg border-2 min-w-[250px] max-w-[350px] font-mono text-sm cursor-pointer transition-all duration-200 ${
           isConnecting && selectedNodeForConnection !== prop.id 
             ? 'border-blue-500 shadow-blue-200 shadow-lg hover:border-blue-600' 
             : isConnecting 
               ? 'border-green-500 shadow-green-200' 
-              : nodeData.isAssociationClass
-                ? 'hover:border-blue-700'
-                : 'border-gray-800 hover:border-gray-600'
+              : 'border-gray-800 hover:border-gray-600'
         }`}
         onContextMenu={handleContextMenu}
         onClick={handleNodeClick}
       >
         {/* Nombre de la clase */}
-        <div className={`border-b-2 p-3 ${nodeData.isAssociationClass ? 'border-blue-600 bg-blue-100' : 'border-gray-800 bg-gray-50'}`}>
+        <div className="border-b-2 p-3 border-gray-800 bg-gray-50">
           <input 
             type="text"
             value={className}
@@ -190,7 +188,7 @@ export function TextUpdaterNode(prop: any) {
         </div>
 
         {/* Sección de Atributos */}
-        <div className={`border-b-2 min-h-[60px] ${nodeData.isAssociationClass ? 'border-blue-600' : 'border-gray-800'}`}>
+        <div className="border-b-2 min-h-[60px] border-gray-800">
           <div className="p-2">
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-semibold text-gray-600">ATRIBUTOS</span>

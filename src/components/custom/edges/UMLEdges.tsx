@@ -305,20 +305,6 @@ export function AggregationEdge({
     targetPosition,
   });
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [tempLabel, setTempLabel] = useState(data?.label || '');
-  const updateEdge = useDiagramStore((state) => state.updateEdge);
-
-  const handleSave = () => {
-    updateEdge(id, {
-      data: {
-        ...data,
-        label: tempLabel,
-      }
-    });
-    setIsEditing(false);
-  };
-
   return (
     <>
       <BaseEdge
@@ -331,47 +317,21 @@ export function AggregationEdge({
         markerStart="url(#aggregation-start)"
       />
       <EdgeLabelRenderer>
-        <div
-          style={{
-            position: 'absolute',
-            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-            pointerEvents: 'all',
-          }}
-          onDoubleClick={() => setIsEditing(true)}
-          className="cursor-pointer"
-        >
-          {isEditing ? (
-            <div className="bg-white p-2 border border-gray-300 rounded shadow-lg">
-              <div className="flex flex-col gap-1">
-                <input
-                  type="text"
-                  value={tempLabel}
-                  onChange={(e) => setTempLabel(e.target.value)}
-                  className="w-24 h-6 text-xs text-center border border-gray-300 rounded"
-                  placeholder="Label"
-                />
-                <div className="flex gap-1">
-                  <button
-                    onClick={handleSave}
-                    className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    ✓
-                  </button>
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
+        {/* Solo mostrar label si existe uno definido */}
+        {data?.label && (
+          <div
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              pointerEvents: 'all',
+            }}
+            className="cursor-pointer"
+          >
             <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
-              {data?.label || 'Double-click to edit'}
+              {data.label}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </EdgeLabelRenderer>
       {/* Definición del marcador de agregación */}
       <defs>
@@ -415,20 +375,6 @@ export function CompositionEdge({
     targetY,
   });
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [tempLabel, setTempLabel] = useState(data?.label || '');
-  const updateEdge = useDiagramStore((state) => state.updateEdge);
-
-  const handleSave = () => {
-    updateEdge(id, {
-      data: {
-        ...data,
-        label: tempLabel,
-      }
-    });
-    setIsEditing(false);
-  };
-
   return (
     <>
       <BaseEdge
@@ -441,47 +387,21 @@ export function CompositionEdge({
         markerStart="url(#composition-start)"
       />
       <EdgeLabelRenderer>
-        <div
-          style={{
-            position: 'absolute',
-            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-            pointerEvents: 'all',
-          }}
-          onDoubleClick={() => setIsEditing(true)}
-          className="cursor-pointer"
-        >
-          {isEditing ? (
-            <div className="bg-white p-2 border border-gray-300 rounded shadow-lg">
-              <div className="flex flex-col gap-1">
-                <input
-                  type="text"
-                  value={tempLabel}
-                  onChange={(e) => setTempLabel(e.target.value)}
-                  className="w-24 h-6 text-xs text-center border border-gray-300 rounded"
-                  placeholder="Label"
-                />
-                <div className="flex gap-1">
-                  <button
-                    onClick={handleSave}
-                    className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    ✓
-                  </button>
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
+        {/* Solo mostrar label si existe uno definido */}
+        {data?.label && (
+          <div
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              pointerEvents: 'all',
+            }}
+            className="cursor-pointer"
+          >
             <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
-              {data?.label || 'Double-click to edit'}
+              {data.label}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </EdgeLabelRenderer>
       {/* Definición del marcador de composición */}
       <defs>
@@ -525,20 +445,6 @@ export function InheritanceEdge({
     targetY,
   });
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [tempLabel, setTempLabel] = useState(data?.label || '');
-  const updateEdge = useDiagramStore((state) => state.updateEdge);
-
-  const handleSave = () => {
-    updateEdge(id, {
-      data: {
-        ...data,
-        label: tempLabel,
-      }
-    });
-    setIsEditing(false);
-  };
-
   return (
     <>
       <BaseEdge
@@ -551,64 +457,38 @@ export function InheritanceEdge({
         markerEnd="url(#inheritance-end)"
       />
       <EdgeLabelRenderer>
-        <div
-          style={{
-            position: 'absolute',
-            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-            pointerEvents: 'all',
-          }}
-          onDoubleClick={() => setIsEditing(true)}
-          className="cursor-pointer"
-        >
-          {isEditing ? (
-            <div className="bg-white p-2 border border-gray-300 rounded shadow-lg">
-              <div className="flex flex-col gap-1">
-                <input
-                  type="text"
-                  value={tempLabel}
-                  onChange={(e) => setTempLabel(e.target.value)}
-                  className="w-24 h-6 text-xs text-center border border-gray-300 rounded"
-                  placeholder="Label"
-                />
-                <div className="flex gap-1">
-                  <button
-                    onClick={handleSave}
-                    className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    ✓
-                  </button>
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
+        {/* Solo mostrar label si existe uno definido */}
+        {data?.label && (
+          <div
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              pointerEvents: 'all',
+            }}
+            className="cursor-pointer"
+          >
             <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
-              {data?.label || 'Double-click to edit'}
+              {data.label}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </EdgeLabelRenderer>
-      {/* Definición del marcador de herencia */}
+      {/* Definición del marcador de herencia - triángulo vacío */}
       <defs>
         <marker
           id="inheritance-end"
-          markerWidth="24"
-          markerHeight="24"
-          refX="24"
-          refY="4"
+          markerWidth="20"
+          markerHeight="20"
+          refX="20"
+          refY="6"
           orient="auto"
           markerUnits="strokeWidth"
         >
           <polygon
-            points="24,4 16,8 8,4 16,0"
+            points="20,6 8,12 8,0"
             fill="white"
             stroke="#374151"
-            strokeWidth="2"
+            strokeWidth="1.5"
           />
         </marker>
       </defs>
@@ -636,25 +516,11 @@ export function DependencyEdge({
     targetY,
   });
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [tempLabel, setTempLabel] = useState(data?.label || '');
-  const updateEdge = useDiagramStore((state) => state.updateEdge);
-
-  const handleSave = () => {
-    updateEdge(id, {
-      data: {
-        ...data,
-        label: tempLabel,
-      }
-    });
-    setIsEditing(false);
-  };
-
   return (
     <>
       <BaseEdge
         path={edgePath}
-        markerEnd={markerEnd}
+        markerEnd="url(#dependency-end)"
         style={{
           strokeWidth: 2,
           stroke: '#374151',
@@ -663,48 +529,41 @@ export function DependencyEdge({
         }}
       />
       <EdgeLabelRenderer>
-        <div
-          style={{
-            position: 'absolute',
-            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-            pointerEvents: 'all',
-          }}
-          onDoubleClick={() => setIsEditing(true)}
-          className="cursor-pointer"
-        >
-          {isEditing ? (
-            <div className="bg-white p-2 border border-gray-300 rounded shadow-lg">
-              <div className="flex flex-col gap-1">
-                <input
-                  type="text"
-                  value={tempLabel}
-                  onChange={(e) => setTempLabel(e.target.value)}
-                  className="w-24 h-6 text-xs text-center border border-gray-300 rounded"
-                  placeholder="Label"
-                />
-                <div className="flex gap-1">
-                  <button
-                    onClick={handleSave}
-                    className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    ✓
-                  </button>
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
+        {/* Solo mostrar label si existe uno definido */}
+        {data?.label && (
+          <div
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              pointerEvents: 'all',
+            }}
+            className="cursor-pointer"
+          >
             <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
-              {data?.label || 'Double-click to edit'}
+              {data.label}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </EdgeLabelRenderer>
+      {/* Definición del marcador de dependencia - flecha triangular simple */}
+      <defs>
+        <marker
+          id="dependency-end"
+          markerWidth="16"
+          markerHeight="16"
+          refX="16"
+          refY="4"
+          orient="auto"
+          markerUnits="strokeWidth"
+        >
+          <polygon
+            points="16,4 8,8 8,0"
+            fill="#374151"
+            stroke="#374151"
+            strokeWidth="1"
+          />
+        </marker>
+      </defs>
     </>
   );
 }
@@ -728,20 +587,6 @@ export function RealizationEdge({
     targetY,
   });
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [tempLabel, setTempLabel] = useState(data?.label || '');
-  const updateEdge = useDiagramStore((state) => state.updateEdge);
-
-  const handleSave = () => {
-    updateEdge(id, {
-      data: {
-        ...data,
-        label: tempLabel,
-      }
-    });
-    setIsEditing(false);
-  };
-
   return (
     <>
       <BaseEdge
@@ -755,64 +600,38 @@ export function RealizationEdge({
         markerEnd="url(#realization-end)"
       />
       <EdgeLabelRenderer>
-        <div
-          style={{
-            position: 'absolute',
-            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-            pointerEvents: 'all',
-          }}
-          onDoubleClick={() => setIsEditing(true)}
-          className="cursor-pointer"
-        >
-          {isEditing ? (
-            <div className="bg-white p-2 border border-gray-300 rounded shadow-lg">
-              <div className="flex flex-col gap-1">
-                <input
-                  type="text"
-                  value={tempLabel}
-                  onChange={(e) => setTempLabel(e.target.value)}
-                  className="w-24 h-6 text-xs text-center border border-gray-300 rounded"
-                  placeholder="Label"
-                />
-                <div className="flex gap-1">
-                  <button
-                    onClick={handleSave}
-                    className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    ✓
-                  </button>
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
+        {/* Solo mostrar label si existe uno definido */}
+        {data?.label && (
+          <div
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              pointerEvents: 'all',
+            }}
+            className="cursor-pointer"
+          >
             <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
-              {data?.label || 'Double-click to edit'}
+              {data.label}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </EdgeLabelRenderer>
-      {/* Definición del marcador de realización */}
+      {/* Definición del marcador de realización - triángulo vacío con línea punteada */}
       <defs>
         <marker
           id="realization-end"
-          markerWidth="24"
-          markerHeight="24"
-          refX="24"
-          refY="4"
+          markerWidth="20"
+          markerHeight="20"
+          refX="20"
+          refY="6"
           orient="auto"
           markerUnits="strokeWidth"
         >
           <polygon
-            points="24,4 16,8 8,4 16,0"
+            points="20,6 8,12 8,0"
             fill="white"
             stroke="#374151"
-            strokeWidth="2"
+            strokeWidth="1.5"
           />
         </marker>
       </defs>

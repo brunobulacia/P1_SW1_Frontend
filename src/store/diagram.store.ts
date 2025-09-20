@@ -332,7 +332,8 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
     };
 
     // Crear relación directa entre las dos clases principales (many-to-many)
-    const { sourceHandle: mainSourceHandle, targetHandle: mainTargetHandle } = getUniqueHandles(sourceId, targetId);
+    const { sourceHandle: mainSourceHandle, targetHandle: mainTargetHandle } =
+      getUniqueHandles(sourceId, targetId);
     const mainEdge: Edge = {
       id: `edge-${sourceId}-${targetId}-many-to-many-${Date.now()}`,
       source: sourceId,
