@@ -1,4 +1,15 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
+"use client";
+
+import {
+  UmlClassIcon,
+  UmlAssociationIcon,
+  UmlAggregationIcon,
+  UmlCompositionIcon,
+  UmlGeneralizationIcon,
+  UmlNoteIcon,
+} from "@/components/custom/icons/UMLIcons";
+
+import { useDiagramStore } from "@/store/diagram.store";
 
 import {
   Sidebar,
@@ -11,50 +22,36 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-// Menu items.
 const items = [
-  {
-    title: "Home",
-    url: "#",
-    icon: Home,
-  },
-  {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
-  },
-  {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
-  },
-  {
-    title: "Search",
-    url: "#",
-    icon: Search,
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
-  },
+  { title: "Clase", icon: UmlClassIcon },
+  { title: "Asociación", icon: UmlAssociationIcon },
+  { title: "Agregación", icon: UmlAggregationIcon },
+  { title: "Composición", icon: UmlCompositionIcon },
+  { title: "Herencia", icon: UmlGeneralizationIcon },
+  { title: "Nota", icon: UmlNoteIcon },
 ];
 
 export function AppSidebar() {
+  const addNode = useDiagramStore((state) => state.addNode);
+  
+  const handleAddNode = (nodeType: string) => {
+    addNode(nodeType);
+  };
+
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel>Elementos</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                    <button onClick={() => handleAddNode(item.title)}>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
