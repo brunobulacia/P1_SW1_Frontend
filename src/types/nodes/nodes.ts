@@ -11,6 +11,7 @@ export interface ClassNodeData {
   label: string;
   attributes: Attribute[];
   methods?: string[];
+  isAssociationClass?: boolean; // Para identificar clases de asociación
   [key: string]: any; // Para compatibilidad con ReactFlow
 }
 
@@ -25,7 +26,9 @@ export type RelationType =
   | "composition" // Composición (diamante lleno)
   | "inheritance" // Herencia (flecha triangular vacía)
   | "realization" // Realización (flecha triangular vacía con línea punteada)
-  | "dependency"; // Dependencia (línea punteada con flecha)
+  | "dependency" // Dependencia (línea punteada con flecha)
+  | "many-to-many" // Relación muchos-a-muchos con clase de asociación
+  | "association-class"; // Línea punteada desde relación principal a clase de asociación
 
 export interface RelationshipData {
   type: RelationType;
@@ -34,6 +37,7 @@ export interface RelationshipData {
   targetCardinality?: string;
   sourceRole?: string; // nombre del rol en el extremo source
   targetRole?: string; // nombre del rol en el extremo target
+  associationClass?: string; // ID de la clase de asociación para relaciones many-to-many
   [key: string]: any;
 }
 

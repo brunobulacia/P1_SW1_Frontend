@@ -21,6 +21,7 @@ interface DiagramStore {
     targetId: string,
     relationType: RelationType
   ) => void;
+  addManyToManyRelation: (sourceId: string, targetId: string) => void;
   updateNode: (id: string, changes: Partial<Node>) => void;
   updateEdge: (id: string, changes: Partial<Edge>) => void;
   removeNode: (id: string) => void;
@@ -163,6 +164,12 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
   },
 
   addEdge: (sourceId: string, targetId: string, relationType: RelationType) => {
+    // Si es many-to-many, usar la función especializada
+    if (relationType === "many-to-many") {
+      get().addManyToManyRelation(sourceId, targetId);
+      return;
+    }
+
     const { edges } = get();
 
     // Calcular handles únicos para evitar solapamiento
@@ -237,6 +244,114 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
 
     set((state) => ({
       edges: [...state.edges, newEdge],
+      connectionMode: null,
+      isConnecting: false,
+      selectedNodeForConnection: null,
+    }));
+  },
+
+  addManyToManyRelation: (sourceId: string, targetId: string) => {
+    const { nodes, edges } = get();
+
+    // Obtener información de los nodos source y target
+    const sourceNode = nodes.find((n) => n.id === sourceId);
+    const targetNode = nodes.find((n) => n.id === targetId);
+
+    if (!sourceNode || !targetNode) return;
+
+    // Calcular posición de la clase de asociación (punto medio)
+    const associationX = (sourceNode.position.x + targetNode.position.x) / 2;
+    const associationY =
+      (sourceNode.position.y + targetNode.position.y) / 2 + 80; // Abajo del centro
+
+    // Crear la clase de asociación intermedia
+    const associationClassId = `association-${sourceId}-${targetId}-${Date.now()}`;
+    const associationClass: Node = {
+      id: associationClassId,
+      type: "textUpdater",
+      position: { x: associationX, y: associationY },
+      data: {
+        label: `AssociationClass1`,
+        attributes: [
+          {
+            id: `attr-${Date.now()}`,
+            name: "id",
+            type: "number",
+            visibility: "private" as const,
+          },
+        ],
+        isAssociationClass: true, // Marcar como clase de asociación
+      } as ClassNodeData,
+    };
+
+    // Función para obtener handles únicos
+    const getUniqueHandles = (sourceId: string, targetId: string) => {
+      const sourceHandles = [
+        "bottom",
+        "bottom-left",
+        "bottom-right",
+        "right",
+        "right-top",
+        "right-bottom",
+        "left",
+        "left-top",
+        "left-bottom",
+        "top",
+        "top-left",
+        "top-right",
+      ];
+      const targetHandles = [
+        "top",
+        "top-left",
+        "top-right",
+        "left",
+        "left-top",
+        "left-bottom",
+        "right",
+        "right-top",
+        "right-bottom",
+        "bottom",
+        "bottom-left",
+        "bottom-right",
+      ];
+
+      const sourceConnections = edges.filter((e) => e.source === sourceId);
+      const targetConnections = edges.filter((e) => e.target === targetId);
+
+      const usedSourceHandles = sourceConnections.map((e) => e.sourceHandle);
+      const usedTargetHandles = targetConnections.map((e) => e.targetHandle);
+
+      const sourceHandle =
+        sourceHandles.find((h) => !usedSourceHandles.includes(h)) ||
+        sourceHandles[sourceConnections.length % sourceHandles.length];
+      const targetHandle =
+        targetHandles.find((h) => !usedTargetHandles.includes(h)) ||
+        targetHandles[targetConnections.length % targetHandles.length];
+
+      return { sourceHandle, targetHandle };
+    };
+
+    // Crear relación directa entre las dos clases principales (many-to-many)
+    const { sourceHandle: mainSourceHandle, targetHandle: mainTargetHandle } = getUniqueHandles(sourceId, targetId);
+    const mainEdge: Edge = {
+      id: `edge-${sourceId}-${targetId}-many-to-many-${Date.now()}`,
+      source: sourceId,
+      target: targetId,
+      type: "association",
+      sourceHandle: mainSourceHandle,
+      targetHandle: mainTargetHandle,
+      data: {
+        type: "association",
+        sourceCardinality: "*",
+        targetCardinality: "*",
+        label: "",
+        associationClass: associationClassId, // Referencia a la clase de asociación
+      },
+    };
+
+    set((state) => ({
+      nodes: [...state.nodes, associationClass],
+      edges: [...state.edges, mainEdge],
       connectionMode: null,
       isConnecting: false,
       selectedNodeForConnection: null,
