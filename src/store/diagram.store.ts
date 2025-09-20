@@ -165,14 +165,68 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
   addEdge: (sourceId: string, targetId: string, relationType: RelationType) => {
     const { edges } = get();
 
+    // Calcular handles únicos para evitar solapamiento
+    const getUniqueHandles = (sourceId: string, targetId: string) => {
+      // Definir todos los handles disponibles por posición
+      const sourceHandles = [
+        "bottom",
+        "bottom-left",
+        "bottom-right",
+        "right",
+        "right-top",
+        "right-bottom",
+        "left",
+        "left-top",
+        "left-bottom",
+        "top",
+        "top-left",
+        "top-right",
+      ];
+
+      const targetHandles = [
+        "top",
+        "top-left",
+        "top-right",
+        "left",
+        "left-top",
+        "left-bottom",
+        "right",
+        "right-top",
+        "right-bottom",
+        "bottom",
+        "bottom-left",
+        "bottom-right",
+      ];
+
+      // Contar conexiones existentes desde el nodo source
+      const sourceConnections = edges.filter((e) => e.source === sourceId);
+      const targetConnections = edges.filter((e) => e.target === targetId);
+
+      // Obtener handles ya usados
+      const usedSourceHandles = sourceConnections.map((e) => e.sourceHandle);
+      const usedTargetHandles = targetConnections.map((e) => e.targetHandle);
+
+      // Seleccionar el primer handle disponible
+      const sourceHandle =
+        sourceHandles.find((h) => !usedSourceHandles.includes(h)) ||
+        sourceHandles[sourceConnections.length % sourceHandles.length];
+      const targetHandle =
+        targetHandles.find((h) => !usedTargetHandles.includes(h)) ||
+        targetHandles[targetConnections.length % targetHandles.length];
+
+      return { sourceHandle, targetHandle };
+    };
+
+    const { sourceHandle, targetHandle } = getUniqueHandles(sourceId, targetId);
+
     // Allow unlimited relationships between same nodes
     const newEdge: Edge = {
       id: `edge-${sourceId}-${targetId}-${relationType}-${Date.now()}`,
       source: sourceId,
       target: targetId,
       type: relationType,
-      sourceHandle: "bottom",
-      targetHandle: "top",
+      sourceHandle,
+      targetHandle,
       data: {
         type: relationType,
         sourceCardinality: "",

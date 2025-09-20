@@ -99,13 +99,32 @@ export function TextUpdaterNode(prop: any) {
     }
   };
 
-  // Manejo del menú contextual
+  // Manejo del menú contextual - versión simplificada
   const handleContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
+    
+    // Obtener las coordenadas del nodo
+    const nodeElement = event.currentTarget as HTMLElement;
+    const rect = nodeElement.getBoundingClientRect();
+    
+    // Posicionar el menú en la esquina superior derecha del nodo
+    const x = rect.right + 5; // 5px a la derecha del nodo
+    const y = rect.top; // Alineado con la parte superior del nodo
+    
+    // Verificar si se sale de la pantalla y ajustar
+    const windowWidth = window.innerWidth;
+    const menuWidth = 500;
+    
+    let finalX = x;
+    if (x + menuWidth > windowWidth) {
+      // Si se sale por la derecha, ponerlo a la izquierda del nodo
+      finalX = rect.left - menuWidth - 5;
+    }
+    
     setContextMenu({
-      x: event.clientX,
-      y: event.clientY,
+      x: finalX,
+      y: y,
       show: true
     });
   };
@@ -125,19 +144,12 @@ export function TextUpdaterNode(prop: any) {
   const handleNodeClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     
-    console.log('Node clicked:', prop.id);
-    console.log('isConnecting:', isConnecting);
-    console.log('selectedNodeForConnection:', selectedNodeForConnection);
-    console.log('connectionMode:', connectionMode);
-    
     if (isConnecting && selectedNodeForConnection && selectedNodeForConnection !== prop.id) {
-      console.log('Creating connection from', selectedNodeForConnection, 'to', prop.id);
       // Crear la conexión
       const sourceId = selectedNodeForConnection;
       const targetId = prop.id;
       
       addEdge(sourceId, targetId, connectionMode!);
-      console.log('Edge created successfully');
     }
   };
 
@@ -301,41 +313,92 @@ export function TextUpdaterNode(prop: any) {
           </div>
         )}
 
-        {/* Handles invisibles para ReactFlow */}
+        {/* Handles invisibles para ReactFlow - múltiples puntos de conexión */}
         <Handle
           type="target"
           position={Position.Top}
           id="top"
-          style={{ opacity: 0, pointerEvents: 'none' }}
+          style={{ opacity: 0, pointerEvents: 'none', left: '50%' }}
         />
         <Handle
           type="source"
           position={Position.Bottom}
           id="bottom"
-          style={{ opacity: 0, pointerEvents: 'none' }}
+          style={{ opacity: 0, pointerEvents: 'none', left: '50%' }}
         />
         <Handle
           type="target"
           position={Position.Left}
           id="left"
-          style={{ opacity: 0, pointerEvents: 'none' }}
+          style={{ opacity: 0, pointerEvents: 'none', top: '50%' }}
         />
         <Handle
           type="source"
           position={Position.Right}
           id="right"
-          style={{ opacity: 0, pointerEvents: 'none' }}
+          style={{ opacity: 0, pointerEvents: 'none', top: '50%' }}
+        />
+        
+        {/* Handles adicionales para evitar solapamiento */}
+        <Handle
+          type="target"
+          position={Position.Top}
+          id="top-left"
+          style={{ opacity: 0, pointerEvents: 'none', left: '25%' }}
+        />
+        <Handle
+          type="target"
+          position={Position.Top}
+          id="top-right"
+          style={{ opacity: 0, pointerEvents: 'none', left: '75%' }}
+        />
+        <Handle
+          type="source"
+          position={Position.Bottom}
+          id="bottom-left"
+          style={{ opacity: 0, pointerEvents: 'none', left: '25%' }}
+        />
+        <Handle
+          type="source"
+          position={Position.Bottom}
+          id="bottom-right"
+          style={{ opacity: 0, pointerEvents: 'none', left: '75%' }}
+        />
+        <Handle
+          type="target"
+          position={Position.Left}
+          id="left-top"
+          style={{ opacity: 0, pointerEvents: 'none', top: '25%' }}
+        />
+        <Handle
+          type="target"
+          position={Position.Left}
+          id="left-bottom"
+          style={{ opacity: 0, pointerEvents: 'none', top: '75%' }}
+        />
+        <Handle
+          type="source"
+          position={Position.Right}
+          id="right-top"
+          style={{ opacity: 0, pointerEvents: 'none', top: '25%' }}
+        />
+        <Handle
+          type="source"
+          position={Position.Right}
+          id="right-bottom"
+          style={{ opacity: 0, pointerEvents: 'none', top: '75%' }}
         />
       </div>
 
       {/* Menú contextual */}
       {contextMenu.show && (
         <div 
-          className="fixed bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[200px] z-[1000]"
+          className="fixed bg-white border border-gray-200 rounded-md shadow-xl py-1 min-w-[200px] z-[9999]"
           style={{ 
-            left: contextMenu.x, 
-            top: contextMenu.y,
-            zIndex: 1000 
+            left: 350, 
+            top: 0,
+            zIndex: 9999,
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)'
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -345,21 +408,21 @@ export function TextUpdaterNode(prop: any) {
           
           <div className="py-1">
             <button
-              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 flex items-center"
+              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 flex items-center transition-colors duration-150"
               onClick={() => handleStartConnection('association')}
             >
               <UmlAssociationIcon className="mr-2 h-4 w-4" />
               <span>Asociación</span>
             </button>
             <button
-              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 flex items-center"
+              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 flex items-center transition-colors duration-150"
               onClick={() => handleStartConnection('aggregation')}
             >
               <UmlAggregationIcon className="mr-2 h-4 w-4" />
               <span>Agregación</span>
             </button>
             <button
-              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 flex items-center"
+              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 flex items-center transition-colors duration-150"
               onClick={() => handleStartConnection('composition')}
             >
               <UmlCompositionIcon className="mr-2 h-4 w-4" />
@@ -369,21 +432,21 @@ export function TextUpdaterNode(prop: any) {
             <div className="border-t border-gray-100 my-1"></div>
             
             <button
-              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 flex items-center"
+              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 flex items-center transition-colors duration-150"
               onClick={() => handleStartConnection('inheritance')}
             >
               <UmlGeneralizationIcon className="mr-2 h-4 w-4" />
               <span>Herencia</span>
             </button>
             <button
-              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 flex items-center"
+              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 flex items-center transition-colors duration-150"
               onClick={() => handleStartConnection('realization')}
             >
               <UmlRealizationIcon className="mr-2 h-4 w-4" />
               <span>Realización</span>
             </button>
             <button
-              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 flex items-center"
+              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 flex items-center transition-colors duration-150"
               onClick={() => handleStartConnection('dependency')}
             >
               <UmlDependencyIcon className="mr-2 h-4 w-4" />

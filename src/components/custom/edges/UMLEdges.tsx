@@ -1,7 +1,60 @@
 import React, { useState } from 'react';
-import { EdgeProps, getStraightPath, EdgeLabelRenderer, BaseEdge } from '@xyflow/react';
+import { EdgeProps, getSmoothStepPath, EdgeLabelRenderer, BaseEdge } from '@xyflow/react';
 import { RelationshipData } from '@/types/nodes/nodes';
 import { useDiagramStore } from '@/store/diagram.store';
+
+// Utility function para calcular posiciones de cardinalidad
+const getCardinalityPositions = (sourceX: number, sourceY: number, targetX: number, targetY: number, sourcePosition?: string, targetPosition?: string) => {
+  let sourceCardX, sourceCardY, targetCardX, targetCardY;
+  
+  // Position source cardinality near source
+  switch(sourcePosition) {
+    case 'bottom':
+      sourceCardX = sourceX;
+      sourceCardY = sourceY + 20;
+      break;
+    case 'top':
+      sourceCardX = sourceX;
+      sourceCardY = sourceY - 20;
+      break;
+    case 'right':
+      sourceCardX = sourceX + 20;
+      sourceCardY = sourceY;
+      break;
+    case 'left':
+      sourceCardX = sourceX - 20;
+      sourceCardY = sourceY;
+      break;
+    default:
+      sourceCardX = sourceX + 15;
+      sourceCardY = sourceY + 15;
+  }
+  
+  // Position target cardinality near target
+  switch(targetPosition) {
+    case 'bottom':
+      targetCardX = targetX;
+      targetCardY = targetY + 20;
+      break;
+    case 'top':
+      targetCardX = targetX;
+      targetCardY = targetY - 20;
+      break;
+    case 'right':
+      targetCardX = targetX + 20;
+      targetCardY = targetY;
+      break;
+    case 'left':
+      targetCardX = targetX - 20;
+      targetCardY = targetY;
+      break;
+    default:
+      targetCardX = targetX - 15;
+      targetCardY = targetY - 15;
+  }
+  
+  return { sourceCardX, sourceCardY, targetCardX, targetCardY };
+};
 
 // Edge personalizado para Asociación
 export function AssociationEdge({
@@ -16,11 +69,13 @@ export function AssociationEdge({
   data,
   markerEnd,
 }: EdgeProps & { data?: RelationshipData }) {
-  const [edgePath, labelX, labelY] = getStraightPath({
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
     targetX,
     targetY,
+    sourcePosition,
+    targetPosition,
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -74,11 +129,10 @@ export function AssociationEdge({
     setIsEditingTarget(false);
   };
 
-  // Calculate cardinality positions along the edge
-  const sourceCardX = sourceX + (targetX - sourceX) * 0.15;
-  const sourceCardY = sourceY + (targetY - sourceY) * 0.15;
-  const targetCardX = sourceX + (targetX - sourceX) * 0.85;
-  const targetCardY = sourceY + (targetY - sourceY) * 0.85;
+  // Calculate cardinality positions for step edges
+  const { sourceCardX, sourceCardY, targetCardX, targetCardY } = getCardinalityPositions(
+    sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition
+  );
 
   return (
     <>
@@ -217,25 +271,69 @@ export function AggregationEdge({
   style = {},
   data,
 }: EdgeProps & { data?: RelationshipData }) {
-  const [edgePath, labelX, labelY] = getStraightPath({
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
     targetX,
     targetY,
+    sourcePosition,
+    targetPosition,
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingSource, setIsEditingSource] = useState(false);
+  const [isEditingTarget, setIsEditingTarget] = useState(false);
+  const [tempSourceCard, setTempSourceCard] = useState(data?.sourceCardinality || '');
+  const [tempTargetCard, setTempTargetCard] = useState(data?.targetCardinality || '');
   const [tempLabel, setTempLabel] = useState(data?.label || '');
   const updateEdge = useDiagramStore((state) => state.updateEdge);
+
+  const handleSaveSource = () => {
+    updateEdge(id, {
+      data: {
+        ...data,
+        sourceCardinality: tempSourceCard,
+      }
+    });
+    setIsEditingSource(false);
+  };
+
+  const handleSaveTarget = () => {
+    updateEdge(id, {
+      data: {
+        ...data,
+        targetCardinality: tempTargetCard,
+      }
+    });
+    setIsEditingTarget(false);
+  };
 
   const handleSave = () => {
     updateEdge(id, {
       data: {
         ...data,
+        sourceCardinality: tempSourceCard,
+        targetCardinality: tempTargetCard,
         label: tempLabel,
       }
     });
     setIsEditing(false);
+    setIsEditingSource(false);
+    setIsEditingTarget(false);
+  };
+
+  // Calculate cardinality positions for step edges
+  const { sourceCardX, sourceCardY, targetCardX, targetCardY } = getCardinalityPositions(
+    sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition
+  );
+
+  const handleCancel = () => {
+    setTempSourceCard(data?.sourceCardinality || '');
+    setTempTargetCard(data?.targetCardinality || '');
+    setTempLabel(data?.label || '');
+    setIsEditing(false);
+    setIsEditingSource(false);
+    setIsEditingTarget(false);
   };
 
   return (
@@ -291,6 +389,68 @@ export function AggregationEdge({
             </div>
           )}
         </div>
+        
+        {/* Source Cardinality */}
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${sourceCardX}px,${sourceCardY}px)`,
+            pointerEvents: 'all',
+          }}
+          onClick={() => setIsEditingSource(true)}
+          className="cursor-pointer"
+        >
+          {isEditingSource ? (
+            <input
+              type="text"
+              value={tempSourceCard}
+              onChange={(e) => setTempSourceCard(e.target.value)}
+              className="w-12 h-6 text-xs text-center border border-gray-300 rounded bg-white"
+              placeholder="0..*"
+              autoFocus
+              onBlur={handleSaveSource}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveSource();
+                if (e.key === 'Escape') setIsEditingSource(false);
+              }}
+            />
+          ) : (
+            <div className="bg-white px-1 py-0.5 text-xs font-medium text-gray-700 border border-gray-200 rounded shadow-sm min-w-[16px] text-center">
+              {data?.sourceCardinality || ''}
+            </div>
+          )}
+        </div>
+
+        {/* Target Cardinality */}
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${targetCardX}px,${targetCardY}px)`,
+            pointerEvents: 'all',
+          }}
+          onClick={() => setIsEditingTarget(true)}
+          className="cursor-pointer"
+        >
+          {isEditingTarget ? (
+            <input
+              type="text"
+              value={tempTargetCard}
+              onChange={(e) => setTempTargetCard(e.target.value)}
+              className="w-12 h-6 text-xs text-center border border-gray-300 rounded bg-white"
+              placeholder="0..*"
+              autoFocus
+              onBlur={handleSaveTarget}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveTarget();
+                if (e.key === 'Escape') setIsEditingTarget(false);
+              }}
+            />
+          ) : (
+            <div className="bg-white px-1 py-0.5 text-xs font-medium text-gray-700 border border-gray-200 rounded shadow-sm min-w-[16px] text-center">
+              {data?.targetCardinality || ''}
+            </div>
+          )}
+        </div>
       </EdgeLabelRenderer>
       {/* Definición del marcador de agregación */}
       <defs>
@@ -327,7 +487,7 @@ export function CompositionEdge({
   style = {},
   data,
 }: EdgeProps & { data?: RelationshipData }) {
-  const [edgePath, labelX, labelY] = getStraightPath({
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
     targetX,
@@ -336,7 +496,15 @@ export function CompositionEdge({
 
   const [isEditing, setIsEditing] = useState(false);
   const [tempLabel, setTempLabel] = useState(data?.label || '');
+  const [isEditingSource, setIsEditingSource] = useState(false);
+  const [isEditingTarget, setIsEditingTarget] = useState(false);
+  const [tempSourceCard, setTempSourceCard] = useState(data?.sourceCardinality || '');
+  const [tempTargetCard, setTempTargetCard] = useState(data?.targetCardinality || '');
   const updateEdge = useDiagramStore((state) => state.updateEdge);
+
+  const { sourceCardX, sourceCardY, targetCardX, targetCardY } = getCardinalityPositions(
+    sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition
+  );
 
   const handleSave = () => {
     updateEdge(id, {
@@ -346,6 +514,26 @@ export function CompositionEdge({
       }
     });
     setIsEditing(false);
+  };
+
+  const handleSaveSource = () => {
+    updateEdge(id, {
+      data: {
+        ...data,
+        sourceCardinality: tempSourceCard,
+      }
+    });
+    setIsEditingSource(false);
+  };
+
+  const handleSaveTarget = () => {
+    updateEdge(id, {
+      data: {
+        ...data,
+        targetCardinality: tempTargetCard,
+      }
+    });
+    setIsEditingTarget(false);
   };
 
   return (
@@ -401,6 +589,68 @@ export function CompositionEdge({
             </div>
           )}
         </div>
+        
+        {/* Source Cardinality */}
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${sourceCardX}px,${sourceCardY}px)`,
+            pointerEvents: 'all',
+          }}
+          onClick={() => setIsEditingSource(true)}
+          className="cursor-pointer"
+        >
+          {isEditingSource ? (
+            <input
+              type="text"
+              value={tempSourceCard}
+              onChange={(e) => setTempSourceCard(e.target.value)}
+              className="w-12 h-6 text-xs text-center border border-gray-300 rounded bg-white"
+              placeholder="0..*"
+              autoFocus
+              onBlur={handleSaveSource}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveSource();
+                if (e.key === 'Escape') setIsEditingSource(false);
+              }}
+            />
+          ) : (
+            <div className="bg-white px-1 py-0.5 text-xs font-medium text-gray-700 border border-gray-200 rounded shadow-sm min-w-[16px] text-center">
+              {data?.sourceCardinality || ''}
+            </div>
+          )}
+        </div>
+
+        {/* Target Cardinality */}
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${targetCardX}px,${targetCardY}px)`,
+            pointerEvents: 'all',
+          }}
+          onClick={() => setIsEditingTarget(true)}
+          className="cursor-pointer"
+        >
+          {isEditingTarget ? (
+            <input
+              type="text"
+              value={tempTargetCard}
+              onChange={(e) => setTempTargetCard(e.target.value)}
+              className="w-12 h-6 text-xs text-center border border-gray-300 rounded bg-white"
+              placeholder="0..*"
+              autoFocus
+              onBlur={handleSaveTarget}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveTarget();
+                if (e.key === 'Escape') setIsEditingTarget(false);
+              }}
+            />
+          ) : (
+            <div className="bg-white px-1 py-0.5 text-xs font-medium text-gray-700 border border-gray-200 rounded shadow-sm min-w-[16px] text-center">
+              {data?.targetCardinality || ''}
+            </div>
+          )}
+        </div>
       </EdgeLabelRenderer>
       {/* Definición del marcador de composición */}
       <defs>
@@ -437,7 +687,7 @@ export function InheritanceEdge({
   style = {},
   data,
 }: EdgeProps & { data?: RelationshipData }) {
-  const [edgePath, labelX, labelY] = getStraightPath({
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
     targetX,
@@ -446,7 +696,15 @@ export function InheritanceEdge({
 
   const [isEditing, setIsEditing] = useState(false);
   const [tempLabel, setTempLabel] = useState(data?.label || '');
+  const [isEditingSource, setIsEditingSource] = useState(false);
+  const [isEditingTarget, setIsEditingTarget] = useState(false);
+  const [tempSourceCard, setTempSourceCard] = useState(data?.sourceCardinality || '');
+  const [tempTargetCard, setTempTargetCard] = useState(data?.targetCardinality || '');
   const updateEdge = useDiagramStore((state) => state.updateEdge);
+
+  const { sourceCardX, sourceCardY, targetCardX, targetCardY } = getCardinalityPositions(
+    sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition
+  );
 
   const handleSave = () => {
     updateEdge(id, {
@@ -456,6 +714,26 @@ export function InheritanceEdge({
       }
     });
     setIsEditing(false);
+  };
+
+  const handleSaveSource = () => {
+    updateEdge(id, {
+      data: {
+        ...data,
+        sourceCardinality: tempSourceCard,
+      }
+    });
+    setIsEditingSource(false);
+  };
+
+  const handleSaveTarget = () => {
+    updateEdge(id, {
+      data: {
+        ...data,
+        targetCardinality: tempTargetCard,
+      }
+    });
+    setIsEditingTarget(false);
   };
 
   return (
@@ -511,6 +789,68 @@ export function InheritanceEdge({
             </div>
           )}
         </div>
+        
+        {/* Source Cardinality */}
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${sourceCardX}px,${sourceCardY}px)`,
+            pointerEvents: 'all',
+          }}
+          onClick={() => setIsEditingSource(true)}
+          className="cursor-pointer"
+        >
+          {isEditingSource ? (
+            <input
+              type="text"
+              value={tempSourceCard}
+              onChange={(e) => setTempSourceCard(e.target.value)}
+              className="w-12 h-6 text-xs text-center border border-gray-300 rounded bg-white"
+              placeholder="0..*"
+              autoFocus
+              onBlur={handleSaveSource}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveSource();
+                if (e.key === 'Escape') setIsEditingSource(false);
+              }}
+            />
+          ) : (
+            <div className="bg-white px-1 py-0.5 text-xs font-medium text-gray-700 border border-gray-200 rounded shadow-sm min-w-[16px] text-center">
+              {data?.sourceCardinality || ''}
+            </div>
+          )}
+        </div>
+
+        {/* Target Cardinality */}
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${targetCardX}px,${targetCardY}px)`,
+            pointerEvents: 'all',
+          }}
+          onClick={() => setIsEditingTarget(true)}
+          className="cursor-pointer"
+        >
+          {isEditingTarget ? (
+            <input
+              type="text"
+              value={tempTargetCard}
+              onChange={(e) => setTempTargetCard(e.target.value)}
+              className="w-12 h-6 text-xs text-center border border-gray-300 rounded bg-white"
+              placeholder="0..*"
+              autoFocus
+              onBlur={handleSaveTarget}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveTarget();
+                if (e.key === 'Escape') setIsEditingTarget(false);
+              }}
+            />
+          ) : (
+            <div className="bg-white px-1 py-0.5 text-xs font-medium text-gray-700 border border-gray-200 rounded shadow-sm min-w-[16px] text-center">
+              {data?.targetCardinality || ''}
+            </div>
+          )}
+        </div>
       </EdgeLabelRenderer>
       {/* Definición del marcador de herencia */}
       <defs>
@@ -548,7 +888,7 @@ export function DependencyEdge({
   data,
   markerEnd,
 }: EdgeProps & { data?: RelationshipData }) {
-  const [edgePath, labelX, labelY] = getStraightPath({
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
     targetX,
@@ -557,7 +897,15 @@ export function DependencyEdge({
 
   const [isEditing, setIsEditing] = useState(false);
   const [tempLabel, setTempLabel] = useState(data?.label || '');
+  const [isEditingSource, setIsEditingSource] = useState(false);
+  const [isEditingTarget, setIsEditingTarget] = useState(false);
+  const [tempSourceCard, setTempSourceCard] = useState(data?.sourceCardinality || '');
+  const [tempTargetCard, setTempTargetCard] = useState(data?.targetCardinality || '');
   const updateEdge = useDiagramStore((state) => state.updateEdge);
+
+  const { sourceCardX, sourceCardY, targetCardX, targetCardY } = getCardinalityPositions(
+    sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition
+  );
 
   const handleSave = () => {
     updateEdge(id, {
@@ -567,6 +915,26 @@ export function DependencyEdge({
       }
     });
     setIsEditing(false);
+  };
+
+  const handleSaveSource = () => {
+    updateEdge(id, {
+      data: {
+        ...data,
+        sourceCardinality: tempSourceCard,
+      }
+    });
+    setIsEditingSource(false);
+  };
+
+  const handleSaveTarget = () => {
+    updateEdge(id, {
+      data: {
+        ...data,
+        targetCardinality: tempTargetCard,
+      }
+    });
+    setIsEditingTarget(false);
   };
 
   return (
@@ -623,6 +991,68 @@ export function DependencyEdge({
             </div>
           )}
         </div>
+        
+        {/* Source Cardinality */}
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${sourceCardX}px,${sourceCardY}px)`,
+            pointerEvents: 'all',
+          }}
+          onClick={() => setIsEditingSource(true)}
+          className="cursor-pointer"
+        >
+          {isEditingSource ? (
+            <input
+              type="text"
+              value={tempSourceCard}
+              onChange={(e) => setTempSourceCard(e.target.value)}
+              className="w-12 h-6 text-xs text-center border border-gray-300 rounded bg-white"
+              placeholder="0..*"
+              autoFocus
+              onBlur={handleSaveSource}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveSource();
+                if (e.key === 'Escape') setIsEditingSource(false);
+              }}
+            />
+          ) : (
+            <div className="bg-white px-1 py-0.5 text-xs font-medium text-gray-700 border border-gray-200 rounded shadow-sm min-w-[16px] text-center">
+              {data?.sourceCardinality || ''}
+            </div>
+          )}
+        </div>
+
+        {/* Target Cardinality */}
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${targetCardX}px,${targetCardY}px)`,
+            pointerEvents: 'all',
+          }}
+          onClick={() => setIsEditingTarget(true)}
+          className="cursor-pointer"
+        >
+          {isEditingTarget ? (
+            <input
+              type="text"
+              value={tempTargetCard}
+              onChange={(e) => setTempTargetCard(e.target.value)}
+              className="w-12 h-6 text-xs text-center border border-gray-300 rounded bg-white"
+              placeholder="0..*"
+              autoFocus
+              onBlur={handleSaveTarget}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveTarget();
+                if (e.key === 'Escape') setIsEditingTarget(false);
+              }}
+            />
+          ) : (
+            <div className="bg-white px-1 py-0.5 text-xs font-medium text-gray-700 border border-gray-200 rounded shadow-sm min-w-[16px] text-center">
+              {data?.targetCardinality || ''}
+            </div>
+          )}
+        </div>
       </EdgeLabelRenderer>
     </>
   );
@@ -640,7 +1070,7 @@ export function RealizationEdge({
   style = {},
   data,
 }: EdgeProps & { data?: RelationshipData }) {
-  const [edgePath, labelX, labelY] = getStraightPath({
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
     targetX,
@@ -649,7 +1079,15 @@ export function RealizationEdge({
 
   const [isEditing, setIsEditing] = useState(false);
   const [tempLabel, setTempLabel] = useState(data?.label || '');
+  const [isEditingSource, setIsEditingSource] = useState(false);
+  const [isEditingTarget, setIsEditingTarget] = useState(false);
+  const [tempSourceCard, setTempSourceCard] = useState(data?.sourceCardinality || '');
+  const [tempTargetCard, setTempTargetCard] = useState(data?.targetCardinality || '');
   const updateEdge = useDiagramStore((state) => state.updateEdge);
+
+  const { sourceCardX, sourceCardY, targetCardX, targetCardY } = getCardinalityPositions(
+    sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition
+  );
 
   const handleSave = () => {
     updateEdge(id, {
@@ -659,6 +1097,26 @@ export function RealizationEdge({
       }
     });
     setIsEditing(false);
+  };
+
+  const handleSaveSource = () => {
+    updateEdge(id, {
+      data: {
+        ...data,
+        sourceCardinality: tempSourceCard,
+      }
+    });
+    setIsEditingSource(false);
+  };
+
+  const handleSaveTarget = () => {
+    updateEdge(id, {
+      data: {
+        ...data,
+        targetCardinality: tempTargetCard,
+      }
+    });
+    setIsEditingTarget(false);
   };
 
   return (
@@ -712,6 +1170,68 @@ export function RealizationEdge({
           ) : (
             <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
               {data?.label || 'Double-click to edit'}
+            </div>
+          )}
+        </div>
+        
+        {/* Source Cardinality */}
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${sourceCardX}px,${sourceCardY}px)`,
+            pointerEvents: 'all',
+          }}
+          onClick={() => setIsEditingSource(true)}
+          className="cursor-pointer"
+        >
+          {isEditingSource ? (
+            <input
+              type="text"
+              value={tempSourceCard}
+              onChange={(e) => setTempSourceCard(e.target.value)}
+              className="w-12 h-6 text-xs text-center border border-gray-300 rounded bg-white"
+              placeholder="0..*"
+              autoFocus
+              onBlur={handleSaveSource}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveSource();
+                if (e.key === 'Escape') setIsEditingSource(false);
+              }}
+            />
+          ) : (
+            <div className="bg-white px-1 py-0.5 text-xs font-medium text-gray-700 border border-gray-200 rounded shadow-sm min-w-[16px] text-center">
+              {data?.sourceCardinality || ''}
+            </div>
+          )}
+        </div>
+
+        {/* Target Cardinality */}
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${targetCardX}px,${targetCardY}px)`,
+            pointerEvents: 'all',
+          }}
+          onClick={() => setIsEditingTarget(true)}
+          className="cursor-pointer"
+        >
+          {isEditingTarget ? (
+            <input
+              type="text"
+              value={tempTargetCard}
+              onChange={(e) => setTempTargetCard(e.target.value)}
+              className="w-12 h-6 text-xs text-center border border-gray-300 rounded bg-white"
+              placeholder="0..*"
+              autoFocus
+              onBlur={handleSaveTarget}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveTarget();
+                if (e.key === 'Escape') setIsEditingTarget(false);
+              }}
+            />
+          ) : (
+            <div className="bg-white px-1 py-0.5 text-xs font-medium text-gray-700 border border-gray-200 rounded shadow-sm min-w-[16px] text-center">
+              {data?.targetCardinality || ''}
             </div>
           )}
         </div>
