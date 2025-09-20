@@ -1,14 +1,20 @@
 import { create } from "zustand";
 import { Node, Edge } from "@xyflow/react";
-import { Attribute, ClassNodeData, RelationType } from "../types/nodes/nodes";
+import { ClassNodeData, RelationType } from "../types/nodes/nodes";
 
 interface DiagramStore {
   nodes: Node[];
   edges: Edge[];
   connectionMode: RelationType | null;
+  isConnecting: boolean;
+  selectedNodeForConnection: string | null;
   setNodes: (nodes: Node[]) => void;
   setEdges: (edges: Edge[]) => void;
   setConnectionMode: (mode: RelationType | null) => void;
+  setIsConnecting: (connecting: boolean) => void;
+  setSelectedNodeForConnection: (nodeId: string | null) => void;
+  startConnection: (nodeId: string, relationType: RelationType) => void;
+  resetConnection: () => void;
   addNode: (nodeType: string) => void;
   addEdge: (
     sourceId: string,
@@ -95,6 +101,8 @@ const initialEdges: Edge[] = [
     source: "n1",
     target: "n2",
     type: "association",
+    sourceHandle: "bottom",
+    targetHandle: "top",
     data: {
       type: "association",
       sourceCardinality: "1",
@@ -108,10 +116,31 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
   nodes: initialNodes,
   edges: initialEdges,
   connectionMode: null,
+  isConnecting: false,
+  selectedNodeForConnection: null,
 
   setNodes: (nodes) => set({ nodes }),
   setEdges: (edges) => set({ edges }),
   setConnectionMode: (mode) => set({ connectionMode: mode }),
+  setIsConnecting: (connecting) => set({ isConnecting: connecting }),
+  setSelectedNodeForConnection: (nodeId) =>
+    set({ selectedNodeForConnection: nodeId }),
+
+  startConnection: (nodeId: string, relationType: RelationType) => {
+    set({
+      isConnecting: true,
+      selectedNodeForConnection: nodeId,
+      connectionMode: relationType,
+    });
+  },
+
+  resetConnection: () => {
+    set({
+      isConnecting: false,
+      selectedNodeForConnection: null,
+      connectionMode: null,
+    });
+  },
 
   addNode: (nodeType: string) => {
     const { nodes } = get();
@@ -142,6 +171,8 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
       source: sourceId,
       target: targetId,
       type: relationType,
+      sourceHandle: "bottom",
+      targetHandle: "top",
       data: {
         type: relationType,
         sourceCardinality: "",
@@ -152,7 +183,9 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
 
     set((state) => ({
       edges: [...state.edges, newEdge],
-      connectionMode: null, // Reset connection mode after creating edge
+      connectionMode: null,
+      isConnecting: false,
+      selectedNodeForConnection: null,
     }));
   },
 

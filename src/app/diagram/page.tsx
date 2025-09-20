@@ -41,6 +41,8 @@ export default function App() {
   const setNodes = useDiagramStore((state) => state.setNodes);
   const setEdges = useDiagramStore((state) => state.setEdges);
   const connectionMode = useDiagramStore((state) => state.connectionMode);
+  const isConnecting = useDiagramStore((state) => state.isConnecting);
+  const resetConnection = useDiagramStore((state) => state.resetConnection);
   const addEdgeToStore = useDiagramStore((state) => state.addEdge);
 
   const onNodesChange = useCallback(
@@ -69,8 +71,25 @@ export default function App() {
     [connectionMode, addEdgeToStore]
   );
 
+  // Handler para cancelar la conexión al hacer click en el fondo
+  const handlePaneClick = useCallback(() => {
+    if (isConnecting) {
+      resetConnection();
+    }
+  }, [isConnecting, resetConnection]);
+
   return (
     <div className="flex h-screen w-screen">
+      {/* Indicador de estado de conexión */}
+      {isConnecting && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg">
+          <div className="flex items-center space-x-2">
+            <div className="animate-pulse w-2 h-2 bg-white rounded-full"></div>
+            <span>Click en el nodo destino para crear la relación - Presiona ESC para cancelar</span>
+          </div>
+        </div>
+      )}
+      
       <div 
         className="flex-1 h-screen" 
         style={{ 
@@ -85,6 +104,7 @@ export default function App() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onPaneClick={handlePaneClick}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           connectionMode={connectionMode ? ConnectionMode.Loose : ConnectionMode.Strict}
