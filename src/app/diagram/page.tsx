@@ -7,14 +7,28 @@ import {
   addEdge,
   applyEdgeChanges,
   applyNodeChanges,
+  Node as ReactFlowNode,
+  Edge as ReactFlowEdge,
+  Connection,
+  ConnectionMode,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useCallback } from "react";
 import { TextUpdaterNode } from "@/components/custom/nodes/nodes";
+import { AssociationEdge, AggregationEdge, CompositionEdge, InheritanceEdge, DependencyEdge, RealizationEdge } from "@/components/custom/edges/UMLEdges";
 import { useDiagramStore } from "@/store/diagram.store";
 
 const nodeTypes = {
   textUpdater: TextUpdaterNode,
+};
+
+const edgeTypes = {
+  association: AssociationEdge,
+  aggregation: AggregationEdge,
+  composition: CompositionEdge,
+  inheritance: InheritanceEdge,
+  dependency: DependencyEdge,
+  realization: RealizationEdge,
 };
 
 const rfStyle = {
@@ -26,6 +40,8 @@ export default function App() {
   const edges = useDiagramStore((state) => state.edges);
   const setNodes = useDiagramStore((state) => state.setNodes);
   const setEdges = useDiagramStore((state) => state.setEdges);
+  const connectionMode = useDiagramStore((state) => state.connectionMode);
+  const addEdgeToStore = useDiagramStore((state) => state.addEdge);
 
   const onNodesChange = useCallback(
     (changes: any) =>
@@ -40,14 +56,29 @@ export default function App() {
   );
   
   const onConnect = useCallback(
-    (params: any) =>
-      setEdges(addEdge(params, edges)),
-    [edges, setEdges]
+    (connection: Connection) => {
+      if (connectionMode && connection.source && connection.target) {
+        addEdgeToStore(connection.source, connection.target, connectionMode);
+      } else {
+        // Default connection (association)
+        if (connection.source && connection.target) {
+          addEdgeToStore(connection.source, connection.target, 'association');
+        }
+      }
+    },
+    [connectionMode, addEdgeToStore]
   );
 
   return (
-
     <div className="flex h-screen w-screen">
+      <div 
+        className="flex-1 h-screen" 
+        style={{ 
+          width: '100%',
+          height: '100vh',
+          minHeight: '100vh'
+        }}
+      >
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -55,13 +86,18 @@ export default function App() {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          connectionMode={connectionMode ? ConnectionMode.Loose : ConnectionMode.Strict}
           style={{ 
             ...rfStyle, 
+            width: '100%', 
+            height: '100%'
           }}
         >
           <Controls />
           <Background variant={BackgroundVariant.Lines} gap={12} size={1} />
         </ReactFlow>
       </div>
+    </div>
   );
 }
