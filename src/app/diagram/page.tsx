@@ -13,7 +13,7 @@ import {
   ConnectionMode,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { TextUpdaterNode } from "@/components/custom/nodes/nodes";
 import { AssociationEdge, AggregationEdge, CompositionEdge, InheritanceEdge, DependencyEdge, RealizationEdge } from "@/components/custom/edges/UMLEdges";
 import { useDiagramStore } from "@/store/diagram.store";
@@ -44,6 +44,16 @@ export default function App() {
   const isConnecting = useDiagramStore((state) => state.isConnecting);
   const resetConnection = useDiagramStore((state) => state.resetConnection);
   const addEdgeToStore = useDiagramStore((state) => state.addEdge);
+  const autoLayout = useDiagramStore((state) => state.autoLayout);
+
+  // Auto-layout automático cuando cambian los nodos o edges
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      autoLayout();
+    }, 100); // Pequeño delay para evitar múltiples ejecuciones
+    
+    return () => clearTimeout(timer);
+  }, [nodes.length, edges.length]); // Solo cuando cambia la cantidad
 
   const onNodesChange = useCallback(
     (changes: any) =>
@@ -108,6 +118,8 @@ export default function App() {
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           connectionMode={connectionMode ? ConnectionMode.Loose : ConnectionMode.Strict}
+          snapToGrid={true}
+          snapGrid={[20, 20]}
           style={{ 
             ...rfStyle, 
             width: '100%', 
@@ -115,7 +127,12 @@ export default function App() {
           }}
         >
           <Controls />
-          <Background variant={BackgroundVariant.Lines} gap={12} size={1} />
+          <Background 
+            variant={BackgroundVariant.Dots} 
+            gap={20} 
+            size={0.5} 
+            color="#ddd" 
+          />
         </ReactFlow>
       </div>
     </div>

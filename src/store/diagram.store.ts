@@ -25,6 +25,8 @@ interface DiagramStore {
   updateNode: (id: string, changes: Partial<Node>) => void;
   updateEdge: (id: string, changes: Partial<Edge>) => void;
   removeNode: (id: string) => void;
+  autoLayout: () => void;
+  fitToScreen: () => void;
 }
 
 const initialNodes: Node[] = [
@@ -382,5 +384,122 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
         (edge) => edge.source !== id && edge.target !== id
       ),
     }));
+  },
+
+  // Auto-layout usando distribución circular/orgánica
+  autoLayout: () => {
+    set((state) => {
+      const nodes = [...state.nodes];
+      const edges = state.edges;
+
+      if (nodes.length === 0) return state;
+
+      // Configuración del layout
+      const GRID_SIZE = 20;
+      const MIN_DISTANCE = 350; // Distancia mínima entre nodos
+      const CENTER_X = 600;
+      const CENTER_Y = 400;
+
+      // Crear mapa de conexiones
+      const connections = new Map<string, string[]>();
+      nodes.forEach((node) => connections.set(node.id, []));
+
+      edges.forEach((edge) => {
+        if (connections.has(edge.source)) {
+          connections.get(edge.source)!.push(edge.target);
+        }
+        if (connections.has(edge.target)) {
+          connections.get(edge.target)!.push(edge.source);
+        }
+      });
+
+      // Algoritmo de distribución en espiral/circular
+      const updatedNodes = nodes.map((node, index) => {
+        if (nodes.length === 1) {
+          // Un solo nodo, centrarlo
+          return {
+            ...node,
+            position: {
+              x: Math.round(CENTER_X / GRID_SIZE) * GRID_SIZE,
+              y: Math.round(CENTER_Y / GRID_SIZE) * GRID_SIZE,
+            },
+          };
+        }
+
+        // Distribución en espiral para múltiples nodos
+        const angle = (index * 2 * Math.PI) / nodes.length;
+        const radius = Math.max(200, nodes.length * 50); // Radio crece con más nodos
+
+        // Agregar variación para que no sea perfectamente circular
+        const radiusVariation = (index % 3) * 100 - 50; // -50, 0, o 50
+        const finalRadius = radius + radiusVariation;
+
+        const x = CENTER_X + finalRadius * Math.cos(angle);
+        const y = CENTER_Y + finalRadius * Math.sin(angle);
+
+        // Snap to grid
+        const snapX = Math.round(x / GRID_SIZE) * GRID_SIZE;
+        const snapY = Math.round(y / GRID_SIZE) * GRID_SIZE;
+
+        return {
+          ...node,
+          position: { x: snapX, y: snapY },
+        };
+      });
+
+      return {
+        ...state,
+        nodes: updatedNodes,
+      };
+    });
+  },
+
+  // Centrar el diagrama en la pantalla
+  fitToScreen: () => {
+    set((state) => {
+      const nodes = [...state.nodes];
+
+      if (nodes.length === 0) return state;
+
+      // Encontrar bounds del diagrama
+      let minX = Infinity,
+        minY = Infinity;
+      let maxX = -Infinity,
+        maxY = -Infinity;
+
+      nodes.forEach((node) => {
+        minX = Math.min(minX, node.position.x);
+        minY = Math.min(minY, node.position.y);
+        maxX = Math.max(maxX, node.position.x + 300); // ancho estimado del nodo
+        maxY = Math.max(maxY, node.position.y + 200); // alto estimado del nodo
+      });
+
+      // Calcular centro y offset
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+      const targetX = 400; // centro de la pantalla
+      const targetY = 300;
+
+      const offsetX = targetX - centerX;
+      const offsetY = targetY - centerY;
+
+      // Aplicar snap to grid al offset
+      const GRID_SIZE = 20;
+      const snapOffsetX = Math.round(offsetX / GRID_SIZE) * GRID_SIZE;
+      const snapOffsetY = Math.round(offsetY / GRID_SIZE) * GRID_SIZE;
+
+      const updatedNodes = nodes.map((node) => ({
+        ...node,
+        position: {
+          x: node.position.x + snapOffsetX,
+          y: node.position.y + snapOffsetY,
+        },
+      }));
+
+      return {
+        ...state,
+        nodes: updatedNodes,
+      };
+    });
   },
 }));
