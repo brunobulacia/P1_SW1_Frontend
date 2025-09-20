@@ -135,18 +135,18 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
 
   addEdge: (sourceId: string, targetId: string, relationType: RelationType) => {
     const { edges } = get();
-    
-    // Allow multiple relationships between same nodes with different types
+
+    // Allow unlimited relationships between same nodes
     const newEdge: Edge = {
-      id: `edge-${Date.now()}`,
+      id: `edge-${sourceId}-${targetId}-${relationType}-${Date.now()}`,
       source: sourceId,
       target: targetId,
       type: relationType,
       data: {
         type: relationType,
-        sourceCardinality: '',
-        targetCardinality: '',
-        label: '',
+        sourceCardinality: "",
+        targetCardinality: "",
+        label: "",
       },
     };
 
