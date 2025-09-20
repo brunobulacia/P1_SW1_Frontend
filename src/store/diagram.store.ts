@@ -27,6 +27,10 @@ interface DiagramStore {
   removeNode: (id: string) => void;
   autoLayout: () => void;
   fitToScreen: () => void;
+  saveDiagram: () => void;
+  loadDiagram: () => void;
+  exportDiagramJSON: () => any;
+  printDiagramToConsole: () => void;
 }
 
 const initialNodes: Node[] = [
@@ -122,8 +126,16 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
   isConnecting: false,
   selectedNodeForConnection: null,
 
-  setNodes: (nodes) => set({ nodes }),
-  setEdges: (edges) => set({ edges }),
+  setNodes: (nodes) => {
+    set({ nodes });
+    // Auto-save cuando cambian los nodos
+    setTimeout(() => get().saveDiagram(), 100);
+  },
+  setEdges: (edges) => {
+    set({ edges });
+    // Auto-save cuando cambian las edges
+    setTimeout(() => get().saveDiagram(), 100);
+  },
   setConnectionMode: (mode) => set({ connectionMode: mode }),
   setIsConnecting: (connecting) => set({ isConnecting: connecting }),
   setSelectedNodeForConnection: (nodeId) =>
@@ -367,6 +379,8 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
         node.id === id ? { ...node, ...changes } : node
       ),
     }));
+    // Auto-save cuando se actualiza un nodo
+    setTimeout(() => get().saveDiagram(), 100);
   },
 
   updateEdge: (id: string, changes: Partial<Edge>) => {
@@ -375,6 +389,8 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
         edge.id === id ? { ...edge, ...changes } : edge
       ),
     }));
+    // Auto-save cuando se actualiza una edge
+    setTimeout(() => get().saveDiagram(), 100);
   },
 
   removeNode: (id: string) => {
@@ -501,5 +517,176 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
         nodes: updatedNodes,
       };
     });
+  },
+
+  // Guardar el diagrama en localStorage
+  saveDiagram: () => {
+    const state = get();
+    const diagramData = {
+      nodes: state.nodes,
+      edges: state.edges,
+      timestamp: new Date().toISOString(),
+      version: "1.0",
+    };
+
+    try {
+      localStorage.setItem("uml-diagram", JSON.stringify(diagramData, null, 2));
+      console.log("✅ Diagrama guardado en localStorage");
+    } catch (error) {
+      console.error("❌ Error al guardar diagrama:", error);
+    }
+  },
+
+  // Cargar el diagrama desde localStorage
+  loadDiagram: () => {
+    try {
+      const saved = localStorage.getItem("uml-diagram");
+      if (saved) {
+        const diagramData = JSON.parse(saved);
+        set({
+          nodes: diagramData.nodes || [],
+          edges: diagramData.edges || [],
+        });
+        console.log("✅ Diagrama cargado desde localStorage");
+        return true;
+      }
+    } catch (error) {
+      console.error("❌ Error al cargar diagrama:", error);
+    }
+    return false;
+  },
+
+  // Exportar JSON estructurado del diagrama
+  exportDiagramJSON: () => {
+    const state = get();
+
+    // Estructurar la información de forma legible
+    const exportData = {
+      metadata: {
+        title: "UML Class Diagram",
+        created: new Date().toISOString(),
+        version: "1.0",
+        totalClasses: state.nodes.length,
+        totalRelationships: state.edges.length,
+      },
+      classes: state.nodes.map((node) => ({
+        id: node.id,
+        name: (node.data as ClassNodeData).label,
+        position: node.position,
+        attributes: ((node.data as ClassNodeData).attributes || []).map(
+          (attr: any) => ({
+            name: attr.name,
+            type: attr.type,
+            visibility: attr.visibility,
+          })
+        ),
+        methods: (node.data as ClassNodeData).methods || [
+          "constructor()",
+          "toString(): string",
+        ],
+        isAssociationClass:
+          (node.data as ClassNodeData).isAssociationClass || false,
+      })),
+      relationships: state.edges.map((edge) => ({
+        id: edge.id,
+        type: edge.data?.type || "association",
+        source: {
+          classId: edge.source,
+          className: state.nodes.find((n) => n.id === edge.source)?.data
+            ? (
+                state.nodes.find((n) => n.id === edge.source)!
+                  .data as ClassNodeData
+              ).label
+            : "Unknown",
+        },
+        target: {
+          classId: edge.target,
+          className: state.nodes.find((n) => n.id === edge.target)?.data
+            ? (
+                state.nodes.find((n) => n.id === edge.target)!
+                  .data as ClassNodeData
+              ).label
+            : "Unknown",
+        },
+        cardinalities: {
+          source: edge.data?.sourceCardinality || "",
+          target: edge.data?.targetCardinality || "",
+        },
+        label: edge.data?.label || "",
+        associationClass: edge.data?.associationClass
+          ? {
+              classId: edge.data.associationClass,
+              className: state.nodes.find(
+                (n) => n.id === edge.data?.associationClass
+              )?.data
+                ? (
+                    state.nodes.find(
+                      (n) => n.id === edge.data?.associationClass
+                    )!.data as ClassNodeData
+                  ).label
+                : "Unknown",
+            }
+          : null,
+      })),
+    };
+
+    return exportData;
+  },
+
+  // Imprimir diagrama completo en consola
+  printDiagramToConsole: () => {
+    const exportData = get().exportDiagramJSON();
+
+    console.log("\n🎨 ===== DIAGRAMA UML COMPLETO =====");
+    console.log(`📊 Total de clases: ${exportData.metadata.totalClasses}`);
+    console.log(
+      `🔗 Total de relaciones: ${exportData.metadata.totalRelationships}`
+    );
+    console.log(`📅 Generado: ${exportData.metadata.created}\n`);
+
+    console.log("📋 CLASES:");
+    exportData.classes.forEach((cls: any, index: number) => {
+      console.log(
+        `\n${index + 1}. 🏛️  ${cls.name} ${
+          cls.isAssociationClass ? "(Association Class)" : ""
+        }`
+      );
+      console.log(`   📍 Posición: (${cls.position.x}, ${cls.position.y})`);
+      console.log(`   📝 Atributos:`);
+      cls.attributes.forEach((attr: any) => {
+        const visSymbol =
+          attr.visibility === "public"
+            ? "+"
+            : attr.visibility === "private"
+            ? "-"
+            : "#";
+        console.log(`      ${visSymbol} ${attr.name}: ${attr.type}`);
+      });
+      console.log(`   ⚙️  Métodos: ${cls.methods.join(", ")}`);
+    });
+
+    console.log("\n🔗 RELACIONES:");
+    exportData.relationships.forEach((rel: any, index: number) => {
+      console.log(`\n${index + 1}. ${rel.type.toUpperCase()}`);
+      console.log(`   🎯 ${rel.source.className} → ${rel.target.className}`);
+      if (rel.cardinalities.source || rel.cardinalities.target) {
+        console.log(
+          `   📊 Cardinalidades: ${rel.cardinalities.source} → ${rel.cardinalities.target}`
+        );
+      }
+      if (rel.label) {
+        console.log(`   🏷️  Label: ${rel.label}`);
+      }
+      if (rel.associationClass) {
+        console.log(
+          `   🔗 Clase de Asociación: ${rel.associationClass.className}`
+        );
+      }
+    });
+
+    console.log("\n📋 JSON COMPLETO:");
+    console.log(JSON.stringify(exportData, null, 2));
+
+    return exportData;
   },
 }));

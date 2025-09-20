@@ -27,7 +27,8 @@ export function TextUpdaterNode(prop: any) {
     isConnecting, 
     selectedNodeForConnection,
     startConnection,
-    resetConnection 
+    resetConnection,
+    updateNode 
   } = useDiagramStore();
   const { getNodes } = useReactFlow();
 
@@ -63,8 +64,16 @@ export function TextUpdaterNode(prop: any) {
   }, [contextMenu.show, isConnecting, resetConnection]);
 
   const onClassNameChange = useCallback((evt: any) => {
-    setClassName(evt.target.value);
-  }, []);
+    const newName = evt.target.value;
+    setClassName(newName);
+    // Actualizar el store para persistir el cambio
+    updateNode(prop.id, {
+      data: {
+        ...nodeData,
+        label: newName
+      }
+    });
+  }, [updateNode, prop.id, nodeData]);
 
   const addAttribute = () => {
     if (newAttribute.name && newAttribute.type) {

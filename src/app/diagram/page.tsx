@@ -45,6 +45,18 @@ export default function App() {
   const resetConnection = useDiagramStore((state) => state.resetConnection);
   const addEdgeToStore = useDiagramStore((state) => state.addEdge);
   const autoLayout = useDiagramStore((state) => state.autoLayout);
+  const loadDiagram = useDiagramStore((state) => state.loadDiagram);
+  const printDiagramToConsole = useDiagramStore((state) => state.printDiagramToConsole);
+
+  // Cargar diagrama desde localStorage al iniciar
+  useEffect(() => {
+    try {
+      loadDiagram();
+      console.log('✅ Diagrama cargado correctamente');
+    } catch (error) {
+      console.log('ℹ️ No se encontró diagrama guardado, usando configuración inicial');
+    }
+  }, [loadDiagram]);
 
   // Auto-layout automático cuando cambian los nodos o edges
   useEffect(() => {
@@ -54,6 +66,12 @@ export default function App() {
     
     return () => clearTimeout(timer);
   }, [nodes.length, edges.length]); // Solo cuando cambia la cantidad
+
+  // Agregar función global para ver el diagrama en consola
+  useEffect(() => {
+    (window as any).printDiagram = printDiagramToConsole;
+    console.log('🎨 Tip: Escribe "printDiagram()" en la consola para ver el JSON completo del diagrama');
+  }, [printDiagramToConsole]);
 
   const onNodesChange = useCallback(
     (changes: any) =>
