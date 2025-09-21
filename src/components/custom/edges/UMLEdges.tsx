@@ -148,8 +148,10 @@ export function AssociationEdge({
         path={edgePath}
         markerEnd={markerEnd}
         style={{
-          strokeWidth: 2,
-          stroke: '#374151',
+          strokeWidth: 1.5,
+          stroke: '#1f2937',
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
           ...style
         }}
       />
@@ -308,8 +310,10 @@ export function AggregationEdge({
       <BaseEdge
         path={edgePath}
         style={{
-          strokeWidth: 2,
-          stroke: '#374151',
+          strokeWidth: 1.5,
+          stroke: '#1f2937',
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
           ...style
         }}
         markerStart="url(#aggregation-start)"
@@ -343,8 +347,8 @@ export function AggregationEdge({
           <polygon
             points="0,4 8,8 16,4 8,0"
             fill="white"
-            stroke="#374151"
-            strokeWidth="2"
+            stroke="#1f2937"
+            strokeWidth="1.5"
           />
         </marker>
       </defs>
@@ -376,8 +380,10 @@ export function CompositionEdge({
       <BaseEdge
         path={edgePath}
         style={{
-          strokeWidth: 2,
-          stroke: '#374151',
+          strokeWidth: 1.5,
+          stroke: '#1f2937',
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
           ...style
         }}
         markerStart="url(#composition-start)"
@@ -410,9 +416,9 @@ export function CompositionEdge({
         >
           <polygon
             points="0,4 8,8 16,4 8,0"
-            fill="#374151"
-            stroke="#374151"
-            strokeWidth="2"
+            fill="#1f2937"
+            stroke="#1f2937"
+            strokeWidth="1.5"
           />
         </marker>
       </defs>
@@ -444,8 +450,10 @@ export function InheritanceEdge({
       <BaseEdge
         path={edgePath}
         style={{
-          strokeWidth: 2,
-          stroke: '#374151',
+          strokeWidth: 1.5,
+          stroke: '#1f2937',
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
           ...style
         }}
         markerEnd="url(#inheritance-end)"
@@ -514,9 +522,11 @@ export function DependencyEdge({
         path={edgePath}
         markerEnd="url(#dependency-end)"
         style={{
-          strokeWidth: 2,
-          stroke: '#374151',
-          strokeDasharray: '8,4',
+          strokeWidth: 1.5,
+          stroke: '#1f2937',
+          strokeDasharray: '6,3',
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
           ...style,
         }}
       />
@@ -548,8 +558,8 @@ export function DependencyEdge({
         >
           <polygon
             points="16,4 8,8 8,0"
-            fill="#374151"
-            stroke="#374151"
+            fill="#1f2937"
+            stroke="#1f2937"
             strokeWidth="1"
           />
         </marker>
@@ -582,9 +592,11 @@ export function RealizationEdge({
       <BaseEdge
         path={edgePath}
         style={{
-          strokeWidth: 2,
-          stroke: '#374151',
-          strokeDasharray: '8,4',
+          strokeWidth: 1.5,
+          stroke: '#1f2937',
+          strokeDasharray: '6,3',
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
           ...style
         }}
         markerEnd="url(#realization-end)"

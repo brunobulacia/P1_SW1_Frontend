@@ -7,10 +7,18 @@ export interface Attribute {
   visibility: "public" | "private" | "protected";
 }
 
+export interface Method {
+  id: string;
+  name: string;
+  returnType: string;
+  parameters?: string;
+  visibility: "public" | "private" | "protected";
+}
+
 export interface ClassNodeData {
   label: string;
   attributes: Attribute[];
-  methods?: string[];
+  methods: Method[];
   isAssociationClass?: boolean; // Para identificar clases de asociación
   [key: string]: any; // Para compatibilidad con ReactFlow
 }

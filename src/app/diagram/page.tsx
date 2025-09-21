@@ -46,17 +46,20 @@ export default function App() {
   const addEdgeToStore = useDiagramStore((state) => state.addEdge);
   const autoLayout = useDiagramStore((state) => state.autoLayout);
   const loadDiagram = useDiagramStore((state) => state.loadDiagram);
+  const cleanRelationshipLabels = useDiagramStore((state) => state.cleanRelationshipLabels);
   const printDiagramToConsole = useDiagramStore((state) => state.printDiagramToConsole);
 
   // Cargar diagrama desde localStorage al iniciar
   useEffect(() => {
     try {
       loadDiagram();
+      // Limpiar labels de relaciones existentes
+      cleanRelationshipLabels();
       console.log('✅ Diagrama cargado correctamente');
     } catch (error) {
       console.log('ℹ️ No se encontró diagrama guardado, usando configuración inicial');
     }
-  }, [loadDiagram]);
+  }, [loadDiagram, cleanRelationshipLabels]);
 
   // Auto-layout automático cuando cambian los nodos o edges
   useEffect(() => {

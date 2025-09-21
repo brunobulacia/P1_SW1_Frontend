@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { Node, Edge } from "@xyflow/react";
-import { ClassNodeData, RelationType } from "../types/nodes/nodes";
+import { ClassNodeData, RelationType, Method } from "../types/nodes/nodes";
 
 interface DiagramStore {
   nodes: Node[];
@@ -31,6 +31,7 @@ interface DiagramStore {
   loadDiagram: () => void;
   exportDiagramJSON: () => any;
   printDiagramToConsole: () => void;
+  cleanRelationshipLabels: () => void;
 }
 
 const initialNodes: Node[] = [
@@ -60,6 +61,22 @@ const initialNodes: Node[] = [
           visibility: "private" as const,
         },
       ],
+      methods: [
+        {
+          id: "method1",
+          name: "constructor",
+          returnType: "",
+          parameters: "",
+          visibility: "public" as const,
+        },
+        {
+          id: "method2",
+          name: "toString",
+          returnType: "string",
+          parameters: "",
+          visibility: "public" as const,
+        },
+      ],
     } as ClassNodeData,
   },
   {
@@ -82,6 +99,22 @@ const initialNodes: Node[] = [
           visibility: "public" as const,
         },
       ],
+      methods: [
+        {
+          id: "method3",
+          name: "constructor",
+          returnType: "",
+          parameters: "",
+          visibility: "public" as const,
+        },
+        {
+          id: "method4",
+          name: "getPrecio",
+          returnType: "number",
+          parameters: "",
+          visibility: "public" as const,
+        },
+      ],
     } as ClassNodeData,
   },
   {
@@ -95,6 +128,15 @@ const initialNodes: Node[] = [
           id: "attr6",
           name: "fecha",
           type: "Date",
+          visibility: "public" as const,
+        },
+      ],
+      methods: [
+        {
+          id: "method5",
+          name: "constructor",
+          returnType: "",
+          parameters: "",
           visibility: "public" as const,
         },
       ],
@@ -169,6 +211,7 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
       data: {
         label: nodeType,
         attributes: [],
+        methods: [],
       } as ClassNodeData,
     };
 
@@ -240,17 +283,9 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
 
     const { sourceHandle, targetHandle } = getUniqueHandles(sourceId, targetId);
 
-    // Crear un mapeo de tipos de relación a nombres en español
-    const relationshipNames = {
-      association: "asociación",
-      aggregation: "agregación",
-      composition: "composición",
-      inheritance: "herencia",
-      realization: "realización",
-      dependency: "dependencia",
-      "many-to-many": "muchos-a-muchos",
-      "association-class": "clase-asociación",
-    };
+    // Solo las asociaciones deben tener label
+    const shouldHaveLabel = relationType === "association";
+    const label = shouldHaveLabel ? "asociación" : "";
 
     // Allow unlimited relationships between same nodes
     const newEdge: Edge = {
@@ -264,7 +299,7 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
         type: relationType,
         sourceCardinality: "",
         targetCardinality: "",
-        label: relationshipNames[relationType] || relationType,
+        label: label,
       },
     };
 
@@ -304,6 +339,15 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
             name: "id",
             type: "number",
             visibility: "private" as const,
+          },
+        ],
+        methods: [
+          {
+            id: `method-${Date.now()}`,
+            name: "constructor",
+            returnType: "",
+            parameters: "",
+            visibility: "public" as const,
           },
         ],
         isAssociationClass: true, // Marcar como clase de asociación
@@ -674,7 +718,20 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
             : "#";
         console.log(`      ${visSymbol} ${attr.name}: ${attr.type}`);
       });
-      console.log(`   ⚙️  Métodos: ${cls.methods.join(", ")}`);
+      console.log(
+        `   ⚙️  Métodos: ${cls.methods
+          .map(
+            (m: any) =>
+              `${
+                m.visibility === "public"
+                  ? "+"
+                  : m.visibility === "private"
+                  ? "-"
+                  : "#"
+              } ${m.name}(${m.parameters || ""}): ${m.returnType}`
+          )
+          .join(", ")}`
+      );
     });
 
     console.log("\n🔗 RELACIONES:");
@@ -700,5 +757,19 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
     console.log(JSON.stringify(exportData, null, 2));
 
     return exportData;
+  },
+
+  // Limpiar labels de relaciones que no sean asociaciones
+  cleanRelationshipLabels: () => {
+    set((state) => ({
+      edges: state.edges.map((edge) => ({
+        ...edge,
+        data: {
+          ...edge.data,
+          label:
+            edge.type === "association" ? edge.data?.label || "asociación" : "",
+        },
+      })),
+    }));
   },
 }));
