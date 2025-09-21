@@ -101,19 +101,28 @@ export default function App() {
 
   // Handler para cancelar la conexión al hacer click en el fondo
   const handlePaneClick = useCallback(() => {
-    if (isConnecting) {
+    if (isConnecting || connectionMode) {
       resetConnection();
     }
-  }, [isConnecting, resetConnection]);
+  }, [isConnecting, connectionMode, resetConnection]);
 
   return (
     <div className="flex h-screen w-screen">
-      {/* Indicador de estado de conexión */}
+      {/* Indicadores de estado de conexión */}
+      {connectionMode && !isConnecting && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-orange-600 text-white px-4 py-2 rounded-lg shadow-lg">
+          <div className="flex items-center space-x-2">
+            <div className="animate-pulse w-2 h-2 bg-white rounded-full"></div>
+            <span>Paso 1: Click en el nodo ORIGEN para la relación "{connectionMode}" - Presiona ESC para cancelar</span>
+          </div>
+        </div>
+      )}
+      
       {isConnecting && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg">
           <div className="flex items-center space-x-2">
             <div className="animate-pulse w-2 h-2 bg-white rounded-full"></div>
-            <span>Click en el nodo destino para crear la relación - Presiona ESC para cancelar</span>
+            <span>Paso 2: Click en el nodo DESTINO para crear la relación "{connectionMode}" - Presiona ESC para cancelar</span>
           </div>
         </div>
       )}

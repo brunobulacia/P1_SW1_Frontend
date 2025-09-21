@@ -240,6 +240,18 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
 
     const { sourceHandle, targetHandle } = getUniqueHandles(sourceId, targetId);
 
+    // Crear un mapeo de tipos de relación a nombres en español
+    const relationshipNames = {
+      association: "asociación",
+      aggregation: "agregación",
+      composition: "composición",
+      inheritance: "herencia",
+      realization: "realización",
+      dependency: "dependencia",
+      "many-to-many": "muchos-a-muchos",
+      "association-class": "clase-asociación",
+    };
+
     // Allow unlimited relationships between same nodes
     const newEdge: Edge = {
       id: `edge-${sourceId}-${targetId}-${relationType}-${Date.now()}`,
@@ -252,7 +264,7 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
         type: relationType,
         sourceCardinality: "",
         targetCardinality: "",
-        label: "",
+        label: relationshipNames[relationType] || relationType,
       },
     };
 
@@ -359,7 +371,7 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
         type: "association",
         sourceCardinality: "*",
         targetCardinality: "*",
-        label: "",
+        label: "muchos-a-muchos",
         associationClass: associationClassId, // Referencia a la clase de asociación
       },
     };

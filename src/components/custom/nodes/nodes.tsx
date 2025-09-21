@@ -32,6 +32,13 @@ export function TextUpdaterNode(prop: any) {
   } = useDiagramStore();
   const { getNodes } = useReactFlow();
 
+  // Efecto para sincronizar atributos cuando cambia el nodeData desde el store
+  useEffect(() => {
+    if (nodeData?.attributes) {
+      setAttributes(nodeData.attributes);
+    }
+  }, [nodeData?.attributes]);
+
   // Efecto para cerrar el menú contextual al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -83,20 +90,48 @@ export function TextUpdaterNode(prop: any) {
         type: newAttribute.type,
         visibility: newAttribute.visibility
       };
-      setAttributes([...attributes, attribute]);
+      const newAttributes = [...attributes, attribute];
+      setAttributes(newAttributes);
+      
+      // Sincronizar con el store global
+      updateNode(prop.id, {
+        data: {
+          ...nodeData,
+          attributes: newAttributes
+        }
+      });
+      
       setNewAttribute({ name: "", type: "", visibility: 'private' });
       setShowAddAttribute(false);
     }
   };
 
   const removeAttribute = (id: string) => {
-    setAttributes(attributes.filter(attr => attr.id !== id));
+    const newAttributes = attributes.filter(attr => attr.id !== id);
+    setAttributes(newAttributes);
+    
+    // Sincronizar con el store global
+    updateNode(prop.id, {
+      data: {
+        ...nodeData,
+        attributes: newAttributes
+      }
+    });
   };
 
   const updateAttribute = (id: string, field: keyof Attribute, value: string) => {
-    setAttributes(attributes.map(attr => 
+    const newAttributes = attributes.map(attr => 
       attr.id === id ? { ...attr, [field]: value } : attr
-    ));
+    );
+    setAttributes(newAttributes);
+    
+    // Sincronizar con el store global
+    updateNode(prop.id, {
+      data: {
+        ...nodeData,
+        attributes: newAttributes
+      }
+    });
   };
 
   const getVisibilitySymbol = (visibility: string) => {
@@ -149,16 +184,29 @@ export function TextUpdaterNode(prop: any) {
     closeContextMenu();
   };
 
-  // Manejar click en el nodo para completar conexión
+  // Manejar click en el nodo para manejar conexiones
   const handleNodeClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     
+    // Si estamos en modo de conexión desde el sidebar
+    if (connectionMode && !isConnecting) {
+      // Primer click: seleccionar nodo origen
+      startConnection(prop.id, connectionMode);
+      return;
+    }
+    
     if (isConnecting && selectedNodeForConnection && selectedNodeForConnection !== prop.id) {
-      // Crear la conexión
+      // Segundo click: crear la conexión entre origen y destino
       const sourceId = selectedNodeForConnection;
       const targetId = prop.id;
       
       addEdge(sourceId, targetId, connectionMode!);
+      return;
+    }
+    
+    // Si hacemos click en el mismo nodo que ya está seleccionado, cancelar
+    if (isConnecting && selectedNodeForConnection === prop.id) {
+      resetConnection();
     }
   };
 
@@ -175,11 +223,17 @@ export function TextUpdaterNode(prop: any) {
     <>
       <div 
         className={`bg-white border-gray-800 shadow-lg border-2 min-w-[250px] max-w-[350px] font-mono text-sm cursor-pointer transition-all duration-200 ${
-          isConnecting && selectedNodeForConnection !== prop.id 
-            ? 'border-blue-500 shadow-blue-200 shadow-lg hover:border-blue-600' 
-            : isConnecting 
-              ? 'border-green-500 shadow-green-200' 
-              : 'border-gray-800 hover:border-gray-600'
+          // Nodo ya seleccionado como origen
+          isConnecting && selectedNodeForConnection === prop.id 
+            ? 'border-green-500 shadow-green-200 shadow-lg bg-green-50' 
+            // Nodo disponible para ser destino (modo conexión activo)
+            : isConnecting && selectedNodeForConnection !== prop.id
+              ? 'border-blue-500 shadow-blue-200 shadow-lg hover:border-blue-600 hover:bg-blue-50'
+            // Modo de conexión desde sidebar (esperando selección de origen)
+            : connectionMode && !isConnecting
+              ? 'border-orange-500 shadow-orange-200 shadow-lg hover:border-orange-600 hover:bg-orange-50'
+            // Estado normal
+            : 'border-gray-800 hover:border-gray-600'
         }`}
         onContextMenu={handleContextMenu}
         onClick={handleNodeClick}
@@ -315,10 +369,22 @@ export function TextUpdaterNode(prop: any) {
           </div>
         </div>
 
-        {/* Indicador de estado de conexión */}
+        {/* Indicadores de estado de conexión */}
         {isConnecting && selectedNodeForConnection === prop.id && (
           <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full shadow-lg">
-            Selecciona el nodo destino
+            Origen seleccionado
+          </div>
+        )}
+        
+        {connectionMode && !isConnecting && (
+          <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-pulse">
+            Click para origen
+          </div>
+        )}
+        
+        {isConnecting && selectedNodeForConnection && selectedNodeForConnection !== prop.id && (
+          <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-pulse">
+            Click para destino
           </div>
         )}
 

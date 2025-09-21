@@ -233,7 +233,7 @@ export function AssociationEdge({
           </div>
         )}
 
-        {/* Center Label - Solo mostrar si hay un label real o si hay clase de asociación */}
+        {/* Center Label - Siempre mostrar si hay label definido */}
         {(data?.label || associationClass) && (
           <div
             style={{
@@ -271,11 +271,9 @@ export function AssociationEdge({
                 </div>
               </div>
             ) : (
-              data?.label && (
-                <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
-                  {data.label}
-                </div>
-              )
+              <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
+                {data?.label || "asociación"}
+              </div>
             )}
           </div>
         )}
@@ -317,21 +315,19 @@ export function AggregationEdge({
         markerStart="url(#aggregation-start)"
       />
       <EdgeLabelRenderer>
-        {/* Solo mostrar label si existe uno definido */}
-        {data?.label && (
-          <div
-            style={{
-              position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-              pointerEvents: 'all',
-            }}
-            className="cursor-pointer"
-          >
-            <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
-              {data.label}
-            </div>
+        {/* Siempre mostrar label */}
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            pointerEvents: 'all',
+          }}
+          className="cursor-pointer"
+        >
+          <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
+            {data?.label || "agregación"}
           </div>
-        )}
+        </div>
       </EdgeLabelRenderer>
       {/* Definición del marcador de agregación */}
       <defs>
@@ -387,21 +383,19 @@ export function CompositionEdge({
         markerStart="url(#composition-start)"
       />
       <EdgeLabelRenderer>
-        {/* Solo mostrar label si existe uno definido */}
-        {data?.label && (
-          <div
-            style={{
-              position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-              pointerEvents: 'all',
-            }}
-            className="cursor-pointer"
-          >
-            <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
-              {data.label}
-            </div>
+        {/* Siempre mostrar label */}
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            pointerEvents: 'all',
+          }}
+          className="cursor-pointer"
+        >
+          <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
+            {data?.label || "composición"}
           </div>
-        )}
+        </div>
       </EdgeLabelRenderer>
       {/* Definición del marcador de composición */}
       <defs>
@@ -457,21 +451,19 @@ export function InheritanceEdge({
         markerEnd="url(#inheritance-end)"
       />
       <EdgeLabelRenderer>
-        {/* Solo mostrar label si existe uno definido */}
-        {data?.label && (
-          <div
-            style={{
-              position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-              pointerEvents: 'all',
-            }}
-            className="cursor-pointer"
-          >
-            <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
-              {data.label}
-            </div>
+        {/* Siempre mostrar label */}
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            pointerEvents: 'all',
+          }}
+          className="cursor-pointer"
+        >
+          <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
+            {data?.label || "herencia"}
           </div>
-        )}
+        </div>
       </EdgeLabelRenderer>
       {/* Definición del marcador de herencia - triángulo vacío */}
       <defs>
@@ -529,21 +521,19 @@ export function DependencyEdge({
         }}
       />
       <EdgeLabelRenderer>
-        {/* Solo mostrar label si existe uno definido */}
-        {data?.label && (
-          <div
-            style={{
-              position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-              pointerEvents: 'all',
-            }}
-            className="cursor-pointer"
-          >
-            <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
-              {data.label}
-            </div>
+        {/* Siempre mostrar label */}
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            pointerEvents: 'all',
+          }}
+          className="cursor-pointer"
+        >
+          <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
+            {data?.label || "dependencia"}
           </div>
-        )}
+        </div>
       </EdgeLabelRenderer>
       {/* Definición del marcador de dependencia - flecha triangular simple */}
       <defs>
@@ -600,21 +590,19 @@ export function RealizationEdge({
         markerEnd="url(#realization-end)"
       />
       <EdgeLabelRenderer>
-        {/* Solo mostrar label si existe uno definido */}
-        {data?.label && (
-          <div
-            style={{
-              position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-              pointerEvents: 'all',
-            }}
-            className="cursor-pointer"
-          >
-            <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
-              {data.label}
-            </div>
+        {/* Siempre mostrar label */}
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            pointerEvents: 'all',
+          }}
+          className="cursor-pointer"
+        >
+          <div className="bg-white px-2 py-1 text-xs font-medium text-gray-800 border border-gray-200 rounded shadow-sm">
+            {data?.label || "realización"}
           </div>
-        )}
+        </div>
       </EdgeLabelRenderer>
       {/* Definición del marcador de realización - triángulo vacío con línea punteada */}
       <defs>
