@@ -23,3 +23,10 @@ export const updateDiagram = async (
   const response = await axios.patch(`/diagrams/${diagramId}`, diagramData);
   return response.data;
 };
+
+export const bulkDeleteDiagrams = async (diagramIds: string[]) => {
+  const response = await axios.delete("/diagrams/bulk", {
+    data: { ids: diagramIds },
+  });
+  return response.data;
+};

@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation"
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import { getDiagramsByUser } from "@/api/diagrams"
 import { CreateDiagramDTO } from "@/types/diagrams/diagrams"
-import { createDiagram, deleteDiagram, updateDiagram } from "@/api/diagrams"
+import { createDiagram, deleteDiagram, updateDiagram, bulkDeleteDiagrams } from "@/api/diagrams"
 
 
 interface SearchForm {
@@ -168,12 +168,53 @@ export default function DclassMigrator() {
   }
 
   const toggleSelection = (id: number) => {
-    setDiagrams((prev) => prev.map((d) => (d.id === id ? { ...d, selected: !d.selected } : d)))
+    setDiagrams((prev) => {
+      const updatedDiagrams = prev.map((d) => (d.id === id ? { ...d, selected: !d.selected } : d));
+      
+      // Imprimir información del diagrama que se está toggleando
+      const toggledDiagram = updatedDiagrams.find(d => d.id === id);
+      console.log("🔄 Diagrama toggleado:", {
+        id: id,
+        name: toggledDiagram?.name,
+        selected: toggledDiagram?.selected
+      });
+      
+      // Imprimir todos los diagramas seleccionados actualmente
+      const selectedDiagrams = updatedDiagrams.filter(d => d.selected);
+      console.log("✅ Diagramas seleccionados:", selectedDiagrams.map(d => ({
+        id: d.id,
+        name: d.name
+      })));
+
+      // Imprimir conteo de seleccionados
+      console.log("📊 Total seleccionados:", selectedDiagrams.length);
+      
+      return updatedDiagrams;
+    });
   }
 
   const selectAll = () => {
     const allSelected = diagrams.every((d) => d.selected)
-    setDiagrams((prev) => prev.map((d) => ({ ...d, selected: !allSelected })))
+    console.log("🔄 Select All - Estado actual:", allSelected ? "Todos seleccionados" : "No todos seleccionados");
+    
+    setDiagrams((prev) => {
+      const updatedDiagrams = prev.map((d) => ({ ...d, selected: !allSelected }));
+      
+      // Imprimir resultado de la operación
+      const selectedCount = updatedDiagrams.filter(d => d.selected).length;
+      console.log(`📊 Después de Select All: ${selectedCount}/${updatedDiagrams.length} diagramas seleccionados`);
+      
+      if (!allSelected) {
+        console.log("✅ Todos los diagramas seleccionados:", updatedDiagrams.map(d => ({
+          id: d.id,
+          name: d.name
+        })));
+      } else {
+        console.log("❌ Todos los diagramas deseleccionados");
+      }
+      
+      return updatedDiagrams;
+    });
   }
 
   const handleContextMenu = (e: React.MouseEvent, diagramId: number) => {
@@ -212,9 +253,34 @@ export default function DclassMigrator() {
     closeContextMenu()
   }
 
-  const deleteSelected = () => {
+  const deleteSelected = async () => {
+    const selectedDiagrams = diagrams.filter((d) => d.selected);
+    const remainingDiagrams = diagrams.filter((d) => !d.selected);
+    
+    console.log("🗑️ Eliminando diagramas seleccionados:", selectedDiagrams.map(d => ({
+      id: d.id,
+      name: d.name
+    })));
+    console.log("📊 Diagramas que permanecerán:", remainingDiagrams.length);
+
+        if (selectedDiagrams.length === 0) {
+          console.log("⚠️ No hay diagramas seleccionados para eliminar.");
+          return;
+        }
+        try {
+          const idsToDelete = selectedDiagrams.map(d => d.id.toString());
+          const res = await bulkDeleteDiagrams(idsToDelete);
+          console.log("🗑️ Diagramas eliminados:", res);
+        } catch (error) {
+          console.error("Error al eliminar diagramas:", error);
+        }
+
+
+
     setDiagrams((prev) => prev.filter((d) => !d.selected))
     setIsSelectionMode(false)
+    
+    console.log("✅ Operación de eliminación completada");
   }
 
   return (
