@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { Search, Plus, Trash2, X, Edit, UserPlus, LogOut, MoreVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -13,7 +13,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { getDiagramsByUser } from "@/api/diagrams"
+import { useAuthStore } from "@/store/auth.store"
+import { useRouter } from "next/navigation"
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 
 
 interface SearchForm {
@@ -38,10 +40,13 @@ interface Diagram {
 }
 
 export default function DclassMigrator() {
+  const router = useRouter()
+  const { user, logout } = useAuthStore()
 
   const fetchDiagrams = async () => {
-    const data = await getDiagramsByUser("1")
-    setDiagrams(data)
+    // Comentando temporalmente hasta que se implemente la API
+    // const data = await getDiagramsByUser("1")
+    // setDiagrams(data)
   }
 
   useEffect(() => {
@@ -155,6 +160,9 @@ export default function DclassMigrator() {
         setDeletingDiagram(diagram)
         setIsDeleteDialogOpen(true)
       }
+    } else if (action === "logout") {
+      logout()
+      router.push("/")
     }
 
     closeContextMenu()
@@ -166,7 +174,8 @@ export default function DclassMigrator() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6" onClick={closeContextMenu}>
+    <ProtectedRoute>
+      <div className="min-h-screen bg-background p-6" onClick={closeContextMenu}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -174,6 +183,12 @@ export default function DclassMigrator() {
             <h1 className="text-4xl font-bold text-foreground mb-2">DClass Migrator</h1>
             <p className="text-xl text-muted-foreground">Estos son tus Diagramas</p>
           </div>
+          {user && (
+            <div className="text-right">
+              <p className="text-lg font-medium text-foreground">Bienvenido, {user.username}</p>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
+            </div>
+          )}
         </div>
 
         {/* Search and Actions */}
@@ -440,5 +455,6 @@ export default function DclassMigrator() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   )
 }

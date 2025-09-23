@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { LoginData, RegisterData } from "@/types/auth/auth";
 import { loginApi, registerApi } from "@/api/auth";
 import { useRouter } from "next/navigation";
-import { routerServerGlobal } from "next/dist/server/lib/router-utils/router-server-context";
+import { useAuthStore } from "@/store/auth.store";
 
 interface LoginFormData extends LoginData {}
 
@@ -30,6 +30,9 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
+  
+  // Usar el store de autenticación
+  const { setAuth, isLoading, error, isAuthenticated } = useAuthStore();
 
   const {
     register: loginRegister,
@@ -47,6 +50,10 @@ export default function AuthPage() {
   const onLoginSubmit = async (data: LoginFormData) => {
     try {
       const response = await loginApi(data);
+      
+      // Guardar la respuesta en el store
+      setAuth(response);
+      
       toast.success("Inicio de sesión exitoso");
       console.log("Login response:", response);
       router.push("/home");
@@ -60,6 +67,12 @@ export default function AuthPage() {
     const { confirmPassword, ...registerData } = data;
     try {
       const response = await registerApi(registerData);
+      
+      // Si el registro incluye login automático, guardar en el store
+      if (response.access_token) {
+        setAuth(response);
+      }
+      
       toast.success("Registro exitoso");
       console.log("Register response:", response);
       router.push("/home");
@@ -69,6 +82,13 @@ export default function AuthPage() {
   };
 
   const watchPassword = watch("password");
+
+  // Redirigir si ya está autenticado
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/home");
+    }
+  }, [isAuthenticated, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
@@ -177,9 +197,10 @@ export default function AuthPage() {
 
                   <Button
                     type="submit"
-                    className="w-full h-12 bg-sky-600 hover:bg-sky-700 text-white font-semibold"
+                    disabled={isLoading}
+                    className="w-full h-12 bg-sky-600 hover:bg-sky-700 text-white font-semibold disabled:opacity-50"
                   >
-                    Iniciar Sesión
+                    {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
                   </Button>
                 </form>
               </CardContent>
@@ -349,9 +370,10 @@ export default function AuthPage() {
 
                   <Button
                     type="submit"
-                    className="w-full h-12 bg-sky-600 hover:bg-sky-700 text-white font-semibold"
+                    disabled={isLoading}
+                    className="w-full h-12 bg-sky-600 hover:bg-sky-700 text-white font-semibold disabled:opacity-50"
                   >
-                    Crear Cuenta
+                    {isLoading ? "Creando cuenta..." : "Crear Cuenta"}
                   </Button>
                 </form>
               </CardContent>

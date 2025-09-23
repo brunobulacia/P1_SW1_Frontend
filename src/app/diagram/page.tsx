@@ -17,6 +17,7 @@ import { useCallback, useEffect } from "react";
 import { TextUpdaterNode } from "@/components/custom/nodes/nodes";
 import { AssociationEdge, AggregationEdge, CompositionEdge, InheritanceEdge, DependencyEdge, RealizationEdge } from "@/components/custom/edges/UMLEdges";
 import { useDiagramStore } from "@/store/diagram.store";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 const nodeTypes = {
   textUpdater: TextUpdaterNode,
@@ -110,7 +111,8 @@ export default function App() {
   }, [isConnecting, connectionMode, resetConnection]);
 
   return (
-    <div className="flex h-screen w-screen">
+    <ProtectedRoute>
+      <div className="flex h-screen w-screen">
       {/* Indicadores de estado de conexión */}
       {connectionMode && !isConnecting && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-orange-600 text-white px-4 py-2 rounded-lg shadow-lg">
@@ -166,5 +168,6 @@ export default function App() {
         </ReactFlow>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }
