@@ -2,12 +2,19 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { LoginResponse, AuthUser, LoginCredentials } from "@/types/auth/auth";
 
+// Usuario por defecto para cuando no hay autenticación
+const DEFAULT_USER: AuthUser = {
+  id: "",
+  email: "",
+  username: "",
+};
+
 // Interface del store de autenticación
 interface AuthStore {
   // Estado
   isAuthenticated: boolean;
   accessToken: string | null;
-  user: AuthUser | null;
+  user: AuthUser; // Nunca será null
   isLoading: boolean;
   error: string | null;
 
@@ -28,7 +35,7 @@ export const useAuthStore = create<AuthStore>()(
       // Estado inicial
       isAuthenticated: false,
       accessToken: null,
-      user: null,
+      user: DEFAULT_USER,
       isLoading: false,
       error: null,
 
@@ -82,7 +89,7 @@ export const useAuthStore = create<AuthStore>()(
             error: errorMessage,
             isAuthenticated: false,
             accessToken: null,
-            user: null,
+            user: DEFAULT_USER,
           });
           return false;
         }
@@ -93,7 +100,7 @@ export const useAuthStore = create<AuthStore>()(
         set({
           isAuthenticated: false,
           accessToken: null,
-          user: null,
+          user: DEFAULT_USER,
           error: null,
         });
       },
@@ -103,7 +110,7 @@ export const useAuthStore = create<AuthStore>()(
         set({
           isAuthenticated: false,
           accessToken: null,
-          user: null,
+          user: DEFAULT_USER,
           error: null,
         });
       },
@@ -121,7 +128,8 @@ export const useAuthStore = create<AuthStore>()(
       // Verificar si el usuario está autenticado
       checkAuthStatus: () => {
         const { accessToken, user } = get();
-        const isValid = !!(accessToken && user);
+        // El usuario es válido si tiene un ID (no está vacío)
+        const isValid = !!(accessToken && user.id);
 
         if (!isValid) {
           get().clearAuth();
@@ -162,13 +170,20 @@ export const useAuth = () => {
 
   return {
     ...authStore,
-    isLoggedIn: authStore.isAuthenticated && !!authStore.accessToken,
+    isLoggedIn:
+      authStore.isAuthenticated &&
+      !!authStore.accessToken &&
+      !!authStore.user.id,
   };
 };
 
 // Utilidad para obtener el token actual
 export const getAuthToken = () => {
   return useAuthStore.getState().accessToken;
+};
+
+export const getAuthUser = () => {
+  return useAuthStore.getState().user;
 };
 
 // Utilidad para obtener los headers de autenticación

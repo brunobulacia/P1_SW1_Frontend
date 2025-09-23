@@ -16,6 +16,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { useAuthStore } from "@/store/auth.store"
 import { useRouter } from "next/navigation"
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
+import { getDiagramsByUser } from "@/api/diagrams"
+import { CreateDiagramDTO } from "@/types/diagrams/diagrams"
+import { createDiagram, deleteDiagram, updateDiagram } from "@/api/diagrams"
 
 
 interface SearchForm {
@@ -44,16 +47,33 @@ export default function DclassMigrator() {
   const { user, logout } = useAuthStore()
 
   const fetchDiagrams = async () => {
-    // Comentando temporalmente hasta que se implemente la API
-    // const data = await getDiagramsByUser("1")
-    // setDiagrams(data)
+    // Verificar que el usuario esté disponible antes de hacer la llamada
+    if (!user?.id) {
+      console.warn("Usuario no disponible para cargar diagramas");
+      return;
+    }
+
+    try {
+      setIsLoadingDiagrams(true);
+      const data = await getDiagramsByUser(user.id);
+      console.log("Diagramas cargados:", data);
+      setDiagrams(data);
+    } catch (error) {
+      console.error("Error al cargar diagramas:", error);
+    } finally {
+      setIsLoadingDiagrams(false);
+    }
   }
 
+  // useEffect que se ejecuta cuando el usuario está disponible
   useEffect(() => {
-    fetchDiagrams()
-  }, [])
+    if (user?.id) {
+      fetchDiagrams();
+    }
+  }, [user?.id]) // Dependencia del user.id
 
   const [diagrams, setDiagrams] = useState<Diagram[]>([])
+  const [isLoadingDiagrams, setIsLoadingDiagrams] = useState(false)
 
   const [isSelectionMode, setIsSelectionMode] = useState(false)
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; diagramId: number } | null>(null)
@@ -90,36 +110,60 @@ export default function DclassMigrator() {
     console.log("Searching for:", data.query)
   }
 
-  const onAddDiagram = (data: DiagramForm) => {
-    const newDiagram: Diagram = {
-      id: Math.max(...diagrams.map((d) => d.id)) + 1,
-      name: data.name,
-      description: data.description,
-      thumbnail: "/images/image.png",
-      selected: false,
+  const onAddDiagram = async (data: DiagramForm) => {
+    if (!user?.id) {
+      console.error("Usuario no disponible para crear diagrama");
+      return;
     }
-    setDiagrams((prev) => [...prev, newDiagram])
-    setIsAddDialogOpen(false)
-    resetAdd()
+
+    try {
+      const newDiagram: CreateDiagramDTO = {
+        name: data.name,
+        description: data.description,
+        ownerId: user.id,
+        model: JSON.parse('{}'),
+      }
+      console.log("Adding diagram:", newDiagram)
+      const res = await createDiagram(newDiagram);
+      console.log("Diagrama creado:", res);
+      await fetchDiagrams(); // Recargar diagramas
+      setIsAddDialogOpen(false)
+      resetAdd()
+    } catch (error) {
+      console.error("Error al crear diagrama:", error);
+    }
   }
 
-  const onEditDiagram = (data: DiagramForm) => {
+  const onEditDiagram = async (data: DiagramForm) => {
     if (editingDiagram) {
-      setDiagrams((prev) =>
-        prev.map((d) => (d.id === editingDiagram.id ? { ...d, name: data.name, description: data.description } : d)),
-      )
-      setIsEditDialogOpen(false)
-      setEditingDiagram(null)
-      resetEdit()
+      try {
+        const res = await updateDiagram(editingDiagram.id.toString(), {
+          name: data.name,
+          description: data.description,
+        });
+        console.log("Diagrama actualizado:", res);
+        await fetchDiagrams();
+        setIsEditDialogOpen(false)
+        setEditingDiagram(null)
+        resetEdit()
+      } catch (error) {
+        console.error("Error al actualizar diagrama:", error);
+      }
     }
   }
 
-  const onDeleteDiagram = (data: DeleteConfirmForm) => {
+  const onDeleteDiagram = async (data: DeleteConfirmForm) => {
     if (deletingDiagram && data.confirm) {
-      setDiagrams((prev) => prev.filter((d) => d.id !== deletingDiagram.id))
-      setIsDeleteDialogOpen(false)
-      setDeletingDiagram(null)
-      resetDelete()
+      try {
+        const res = await deleteDiagram(deletingDiagram.id.toString());
+        console.log("Diagrama eliminado:", res);
+        await fetchDiagrams();
+        setIsDeleteDialogOpen(false)
+        setDeletingDiagram(null)
+        resetDelete()
+      } catch (error) {
+        console.error("Error al eliminar diagrama:", error);
+      }
     }
   }
 
@@ -240,7 +284,23 @@ export default function DclassMigrator() {
         )}
 
         {/* Diagrams Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {isLoadingDiagrams ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Cargando diagramas...</p>
+            </div>
+          </div>
+        ) : filteredDiagrams.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-xl text-muted-foreground mb-4">No tienes diagramas aún</p>
+            <Button onClick={() => handleAction("add")}>
+              <Plus className="h-4 w-4 mr-2" />
+              Crear tu primer diagrama
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {filteredDiagrams.map((diagram) => (
             <Card
               key={diagram.id}
@@ -301,7 +361,8 @@ export default function DclassMigrator() {
               </CardContent>
             </Card>
           ))}
-        </div>
+          </div>
+        )}
 
         {/* Context Menu */}
         {contextMenu && (

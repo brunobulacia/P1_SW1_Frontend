@@ -14,9 +14,9 @@ export function AuthStatus() {
   return (
     <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
       <h3 className="font-bold mb-2">Estado de Autenticación</h3>
-      <p><strong>Usuario:</strong> {user?.username}</p>
-      <p><strong>Email:</strong> {user?.email}</p>
-      <p><strong>ID:</strong> {user?.id}</p>
+      <p><strong>Usuario:</strong> {user.username}</p>
+      <p><strong>Email:</strong> {user.email}</p>
+      <p><strong>ID:</strong> {user.id}</p>
       <p><strong>Token:</strong> {accessToken ? "✓ Válido" : "✗ No válido"}</p>
       <button 
         onClick={logout}

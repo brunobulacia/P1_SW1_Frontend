@@ -66,20 +66,20 @@ export function useAuth() {
   return {
     isAuthenticated: isAuthenticated && checkAuthStatus(),
     user,
-    isLoggedIn: isAuthenticated && !!user,
+    isLoggedIn: isAuthenticated && !!user.id, // Usuario válido tiene ID
   };
 }
 
 /**
  * Hook para obtener información del usuario autenticado
- * Redirige al login si no hay usuario
+ * Redirige al login si no hay usuario válido
  */
 export function useAuthenticatedUser(redirectTo: string = "/") {
   const router = useRouter();
   const { user, isAuthenticated, checkAuthStatus } = useAuthStore();
 
   useEffect(() => {
-    if (!isAuthenticated || !checkAuthStatus() || !user) {
+    if (!isAuthenticated || !checkAuthStatus() || !user.id) {
       router.push(redirectTo);
     }
   }, [isAuthenticated, user, checkAuthStatus, router, redirectTo]);
