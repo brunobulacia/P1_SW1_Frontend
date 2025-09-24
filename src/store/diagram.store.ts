@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { Node, Edge } from "@xyflow/react";
 import { ClassNodeData, RelationType, Method } from "../types/nodes/nodes";
+import { getDiagramById, updateDiagram } from "../api/diagrams";
 
 interface DiagramStore {
   nodes: Node[];
@@ -8,6 +9,8 @@ interface DiagramStore {
   connectionMode: RelationType | null;
   isConnecting: boolean;
   selectedNodeForConnection: string | null;
+  currentDiagramId: string | null;
+  isLoading: boolean;
   setNodes: (nodes: Node[]) => void;
   setEdges: (edges: Edge[]) => void;
   setConnectionMode: (mode: RelationType | null) => void;
@@ -29,137 +32,17 @@ interface DiagramStore {
   fitToScreen: () => void;
   saveDiagram: () => void;
   loadDiagram: () => void;
+  loadDiagramById: (diagramId: string) => Promise<void>;
+  saveDiagramToApi: (diagramId: string) => Promise<void>;
+  clearDiagram: () => void;
   exportDiagramJSON: () => any;
   printDiagramToConsole: () => void;
   cleanRelationshipLabels: () => void;
 }
 
-const initialNodes: Node[] = [
-  {
-    id: "n1",
-    type: "textUpdater",
-    position: { x: 250, y: 100 },
-    data: {
-      label: "Usuario",
-      attributes: [
-        {
-          id: "attr1",
-          name: "id",
-          type: "number",
-          visibility: "private" as const,
-        },
-        {
-          id: "attr2",
-          name: "nombre",
-          type: "string",
-          visibility: "public" as const,
-        },
-        {
-          id: "attr3",
-          name: "email",
-          type: "string",
-          visibility: "private" as const,
-        },
-      ],
-      methods: [
-        {
-          id: "method1",
-          name: "constructor",
-          returnType: "",
-          parameters: "",
-          visibility: "public" as const,
-        },
-        {
-          id: "method2",
-          name: "toString",
-          returnType: "string",
-          parameters: "",
-          visibility: "public" as const,
-        },
-      ],
-    } as ClassNodeData,
-  },
-  {
-    id: "n2",
-    type: "textUpdater",
-    position: { x: 250, y: 350 },
-    data: {
-      label: "Producto",
-      attributes: [
-        {
-          id: "attr4",
-          name: "codigo",
-          type: "string",
-          visibility: "private" as const,
-        },
-        {
-          id: "attr5",
-          name: "precio",
-          type: "number",
-          visibility: "public" as const,
-        },
-      ],
-      methods: [
-        {
-          id: "method3",
-          name: "constructor",
-          returnType: "",
-          parameters: "",
-          visibility: "public" as const,
-        },
-        {
-          id: "method4",
-          name: "getPrecio",
-          returnType: "number",
-          parameters: "",
-          visibility: "public" as const,
-        },
-      ],
-    } as ClassNodeData,
-  },
-  {
-    id: "n3",
-    type: "textUpdater",
-    position: { x: 500, y: 225 },
-    data: {
-      label: "Pedido",
-      attributes: [
-        {
-          id: "attr6",
-          name: "fecha",
-          type: "Date",
-          visibility: "public" as const,
-        },
-      ],
-      methods: [
-        {
-          id: "method5",
-          name: "constructor",
-          returnType: "",
-          parameters: "",
-          visibility: "public" as const,
-        },
-      ],
-    } as ClassNodeData,
-  },
-];
+const initialNodes: Node[] = [];
 
-const initialEdges: Edge[] = [
-  {
-    id: "test-edge-1",
-    source: "n1",
-    target: "n2",
-    type: "association",
-    sourceHandle: "bottom",
-    targetHandle: "top",
-    data: {
-      type: "association",
-      sourceCardinality: "1",
-      targetCardinality: "0..*",
-      label: "compra",
-    },
-  },
-];
+const initialEdges: Edge[] = [];
 
 export const useDiagramStore = create<DiagramStore>((set, get) => ({
   nodes: initialNodes,
@@ -167,16 +50,32 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
   connectionMode: null,
   isConnecting: false,
   selectedNodeForConnection: null,
+  currentDiagramId: null,
+  isLoading: false,
 
   setNodes: (nodes) => {
     set({ nodes });
+    const state = get();
     // Auto-save cuando cambian los nodos
-    setTimeout(() => get().saveDiagram(), 100);
+    setTimeout(() => {
+      if (state.currentDiagramId) {
+        state.saveDiagramToApi(state.currentDiagramId);
+      } else {
+        state.saveDiagram();
+      }
+    }, 100);
   },
   setEdges: (edges) => {
     set({ edges });
+    const state = get();
     // Auto-save cuando cambian las edges
-    setTimeout(() => get().saveDiagram(), 100);
+    setTimeout(() => {
+      if (state.currentDiagramId) {
+        state.saveDiagramToApi(state.currentDiagramId);
+      } else {
+        state.saveDiagram();
+      }
+    }, 100);
   },
   setConnectionMode: (mode) => set({ connectionMode: mode }),
   setIsConnecting: (connecting) => set({ isConnecting: connecting }),
@@ -435,8 +334,15 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
         node.id === id ? { ...node, ...changes } : node
       ),
     }));
+    const state = get();
     // Auto-save cuando se actualiza un nodo
-    setTimeout(() => get().saveDiagram(), 100);
+    setTimeout(() => {
+      if (state.currentDiagramId) {
+        state.saveDiagramToApi(state.currentDiagramId);
+      } else {
+        state.saveDiagram();
+      }
+    }, 100);
   },
 
   updateEdge: (id: string, changes: Partial<Edge>) => {
@@ -445,8 +351,15 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
         edge.id === id ? { ...edge, ...changes } : edge
       ),
     }));
+    const state = get();
     // Auto-save cuando se actualiza una edge
-    setTimeout(() => get().saveDiagram(), 100);
+    setTimeout(() => {
+      if (state.currentDiagramId) {
+        state.saveDiagramToApi(state.currentDiagramId);
+      } else {
+        state.saveDiagram();
+      }
+    }, 100);
   },
 
   removeNode: (id: string) => {
@@ -771,5 +684,77 @@ export const useDiagramStore = create<DiagramStore>((set, get) => ({
         },
       })),
     }));
+  },
+
+  // Cargar diagrama específico desde la API
+  loadDiagramById: async (diagramId: string) => {
+    set({ isLoading: true, currentDiagramId: diagramId });
+    try {
+      const diagram = await getDiagramById(diagramId);
+
+      if (diagram.model) {
+        // Parsear el JSON del diagrama
+        const diagramData =
+          typeof diagram.model === "string"
+            ? JSON.parse(diagram.model)
+            : diagram.model;
+
+        set({
+          nodes: diagramData.nodes || [],
+          edges: diagramData.edges || [],
+          isLoading: false,
+        });
+
+        console.log(`✅ Diagrama ${diagramId} cargado exitosamente`);
+      } else {
+        // Si no hay datos del diagrama, inicializar vacío
+        set({
+          nodes: [],
+          edges: [],
+          isLoading: false,
+        });
+        console.log(`ℹ️ Diagrama ${diagramId} está vacío, iniciando nuevo`);
+      }
+    } catch (error) {
+      console.error(`❌ Error al cargar diagrama ${diagramId}:`, error);
+      set({ isLoading: false });
+    }
+  },
+
+  // Guardar diagrama actual en la API
+  saveDiagramToApi: async (diagramId: string) => {
+    const state = get();
+    const diagramData = {
+      nodes: state.nodes,
+      edges: state.edges,
+      metadata: {
+        lastModified: new Date().toISOString(),
+        version: "1.0",
+      },
+    };
+
+    try {
+      console.log(diagramId);
+      const update = await updateDiagram(diagramId, {
+        model: diagramData as any,
+      });
+      console.log(update);
+      console.log(diagramData);
+    } catch (error) {
+      console.error(`❌ Error al guardar diagrama ${diagramId}:`, error);
+    }
+  },
+
+  // Limpiar diagrama actual
+  clearDiagram: () => {
+    set({
+      nodes: [],
+      edges: [],
+      currentDiagramId: null,
+      connectionMode: null,
+      isConnecting: false,
+      selectedNodeForConnection: null,
+    });
+    console.log("🗑️ Diagrama limpiado");
   },
 }));

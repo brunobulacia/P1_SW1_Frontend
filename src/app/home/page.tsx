@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { Search, Plus, Trash2, X, Edit, UserPlus, LogOut, MoreVertical } from "lucide-react"
@@ -263,17 +263,17 @@ export default function DclassMigrator() {
     })));
     console.log("📊 Diagramas que permanecerán:", remainingDiagrams.length);
 
-        if (selectedDiagrams.length === 0) {
-          console.log("⚠️ No hay diagramas seleccionados para eliminar.");
-          return;
-        }
-        try {
-          const idsToDelete = selectedDiagrams.map(d => d.id.toString());
-          const res = await bulkDeleteDiagrams(idsToDelete);
-          console.log("🗑️ Diagramas eliminados:", res);
-        } catch (error) {
-          console.error("Error al eliminar diagramas:", error);
-        }
+   if (selectedDiagrams.length === 0) {
+     console.log("⚠️ No hay diagramas seleccionados para eliminar.");
+     return;
+   }
+   try {
+     const idsToDelete = selectedDiagrams.map(d => d.id.toString());
+     const res = await bulkDeleteDiagrams(idsToDelete);
+     console.log("🗑️ Diagramas eliminados:", res);
+   } catch (error) {
+     console.error("Error al eliminar diagramas:", error);
+   }
 
 
 
@@ -374,7 +374,14 @@ export default function DclassMigrator() {
                 diagram.selected ? "ring-2 ring-primary" : ""
               }`}
               onContextMenu={(e) => handleContextMenu(e, diagram.id)}
-              onClick={() => (isSelectionMode ? toggleSelection(diagram.id) : handleAction("open", diagram.id))}
+              onClick={() => {
+                if (isSelectionMode) {
+                  toggleSelection(diagram.id);
+                } else {
+                  // Navegar al diagrama específico con su ID
+                  router.push(`/diagram?id=${diagram.id}`);
+                }
+              }}
             >
               <CardContent className="p-4">
                 <div className="relative">
@@ -405,16 +412,25 @@ export default function DclassMigrator() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleAction("edit", diagram.id)}>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          handleAction("edit", diagram.id);
+                        }}>
                           <Edit className="h-4 w-4 mr-2" />
                           Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleAction("collaborate", diagram.id)}>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          handleAction("collaborate", diagram.id);
+                        }}>
                           <UserPlus className="h-4 w-4 mr-2" />
                           Agregar Colaborador
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => handleAction("delete", diagram.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAction("delete", diagram.id);
+                          }}
                           className="text-destructive"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />

@@ -12,6 +12,8 @@ import {
 } from "@/components/custom/icons/UMLIcons";
 
 import { useDiagramStore } from "@/store/diagram.store";
+import { HomeIcon, SaveAllIcon, Hand } from "lucide-react";
+
 
 import {
   Sidebar,
@@ -26,6 +28,8 @@ import {
 
 import { useState } from "react";
 import { RelationType } from "@/types/nodes/nodes";
+import { useRouter } from "next/navigation";
+
 
 // Elementos (nodos)
 const nodeItems = [
@@ -47,7 +51,19 @@ export function AppSidebar() {
   const addNode = useDiagramStore((state) => state.addNode);
   const setConnectionMode = useDiagramStore((state) => state.setConnectionMode);
   const currentConnectionMode = useDiagramStore((state) => state.connectionMode);
-  
+  const saveDiagramToAPI = useDiagramStore((state) => state.saveDiagramToApi);
+  const currentDiagramId = useDiagramStore((state) => state.currentDiagramId);
+  const router = useRouter();
+
+
+  const handleInicio = () => {
+    router.push('/home');
+  }
+
+  const handleSave = async () => {
+    await saveDiagramToAPI(currentDiagramId!);
+  }
+
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
   const handleAddNode = (nodeType: string) => {
@@ -80,7 +96,7 @@ export function AppSidebar() {
                     onClick={handleSelectPointer}
                     className={`w-full ${selectedTool === null ? 'bg-blue-100 border-blue-500' : ''}`}
                   >
-                    <span className="text-lg">👆</span>
+                    <Hand className="text-lg" />
                     <span>Seleccionar</span>
                   </button>
                 </SidebarMenuButton>
@@ -132,6 +148,37 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+              <SidebarGroup>
+                <SidebarGroupLabel>Acciones</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <button
+                          onClick={handleSave}
+                          className="w-full"
+                        >
+                          <SaveAllIcon className="text-lg" />
+                          <span>Guardar</span>
+                        </button>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <button
+                          onClick={handleInicio}
+                          className="w-full"
+                        >
+                          <HomeIcon className="text-lg" />
+                          <span>Volver</span>
+                        </button>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+
       </SidebarContent>
     </Sidebar>
   );

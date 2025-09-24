@@ -6,6 +6,11 @@ export const getDiagramsByUser = async (userId: string) => {
   return response.data;
 };
 
+export const getDiagramById = async (diagramId: string) => {
+  const response = await axios.get(`/diagrams/${diagramId}`);
+  return response.data;
+};
+
 export const createDiagram = async (diagramData: CreateDiagramDTO) => {
   const response = await axios.post("/diagrams", diagramData);
   return response.data;
