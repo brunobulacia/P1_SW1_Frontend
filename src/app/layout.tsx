@@ -1,7 +1,7 @@
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthInitializer } from "@/components/auth/AuthInitializer";
-import { connectToServer } from "@/socket/socket-client";
+
 
 
 export default function RootLayout({
@@ -9,8 +9,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Conectar al servidor de sockets al cargar el layout raíz
-  // connectToServer();
   return (
     <html lang="en">
       <body>
