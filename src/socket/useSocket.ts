@@ -1,53 +1,29 @@
+// src/hooks/useSocket.ts
 "use client";
 import { useEffect, useState } from "react";
-import { Manager, Socket } from "socket.io-client";
-import { DefaultEventsMap } from "@socket.io/component-emitter";
+import { Socket } from "socket.io-client";
+import { getSocket } from "@/lib/socket";
 
-export function useSocket(): Socket<DefaultEventsMap, DefaultEventsMap> | null {
-  const [socket, setSocket] = useState<Socket<
-    DefaultEventsMap,
-    DefaultEventsMap
-  > | null>(null);
+export function useSocket(): Socket | null {
+  const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    const manager = new Manager("http://localhost:4000");
-    const socketInstance = manager.socket("/");
-    setSocket(socketInstance);
+    const s = getSocket();
+    setSocket(s);
+
+    const onConnect = () => console.log("🔌 Socket conectado:", s.id);
+    const onDisconnect = () => console.log("🔌 Socket desconectado");
+
+    s.on("connect", onConnect);
+    s.on("disconnect", onDisconnect);
 
     return () => {
-      socketInstance.disconnect();
-      setSocket(null);
+      s.off("connect", onConnect);
+      s.off("disconnect", onDisconnect);
+      // NO desconectar aquí si quieres reusar socket across pages
+      // s.disconnect();
     };
   }, []);
 
   return socket;
-}
-
-export function useSocketListeners(socket: Socket | null) {
-  useEffect(() => {
-    if (!socket) return;
-
-    const onConnect = () => {
-      console.log("Conectado al servidor de sockets con ID:", socket.id);
-    };
-
-    const onDisconnect = () => {
-      console.log("Desconectado del servidor de sockets");
-    };
-
-    const onMessage = (data: any) => {
-      console.log("Mensaje recibido:", data);
-    };
-
-    socket.on("connect", onConnect);
-    socket.on("disconnect", onDisconnect);
-    socket.on("message", onMessage);
-    // socket.emit("generate-invite", "Hola desde el cliente");
-
-    return () => {
-      socket.off("connect", onConnect);
-      socket.off("disconnect", onDisconnect);
-      socket.off("message", onMessage);
-    };
-  }, [socket]);
 }
