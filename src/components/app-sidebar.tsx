@@ -12,7 +12,7 @@ import {
 } from "@/components/custom/icons/UMLIcons";
 
 import { useDiagramStore } from "@/store/diagram.store";
-import { HomeIcon, SaveAllIcon, Hand } from "lucide-react";
+import { HomeIcon, SaveAllIcon, Hand, FileDown, FileJson } from "lucide-react";
 
 
 import {
@@ -29,6 +29,7 @@ import {
 import { useState } from "react";
 import { RelationType } from "@/types/nodes/nodes";
 import { useRouter } from "next/navigation";
+import { getZip } from "@/api/exports";
 
 
 // Elementos (nodos)
@@ -63,6 +64,24 @@ export function AppSidebar() {
   const handleSave = async () => {
     await saveDiagramToAPI(currentDiagramId!);
   }
+
+  const handleExportSpringBoot = async () => {
+    const res = await getZip();
+    const url = window.URL.createObjectURL(new Blob([res]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'springboot_project.zip');
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
+
+  const handleExportPostman = () => {
+    console.log("Export Postman clicked");
+  }
+
 
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
@@ -164,7 +183,29 @@ export function AppSidebar() {
                         </button>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                    <SidebarMenuItem>
+                     <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <button
+                          onClick={handleExportSpringBoot}
+                          className="w-full"
+                        >
+                          <FileDown className="text-lg" />
+                          <span>Exportar SpringBoot</span>
+                        </button>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                     <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <button
+                          onClick={handleExportPostman}
+                          className="w-full"
+                        >
+                          <FileJson className="text-lg" />
+                          <span>Exportar Postman</span>
+                        </button>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                     <SidebarMenuItem>
                       <SidebarMenuButton asChild>
                         <button
                           onClick={handleInicio}

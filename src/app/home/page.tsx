@@ -45,7 +45,7 @@ import {
   updateDiagram,
   bulkDeleteDiagrams,
 } from "@/api/diagrams";
-import { useSocket, useSocketListeners } from "@/socket/useSocket";
+import { useSocket } from "@/socket/useSocket";
 
 interface SearchForm {
   query: string;
@@ -73,7 +73,6 @@ export default function DclassMigrator() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const socket = useSocket();
-  const socketListeners = useSocketListeners(socket);
 
   const fetchDiagrams = async () => {
     // Verificar que el usuario esté disponible antes de hacer la llamada

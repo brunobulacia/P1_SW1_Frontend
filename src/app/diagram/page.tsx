@@ -30,7 +30,7 @@ const edgeTypes = {
 };
 const rfStyle = { backgroundColor: '#f0f0f0' };
 
-export default function App() {
+export default function DiagramPage() {
   const searchParams = useSearchParams();
   const diagramId = searchParams.get('id');
 

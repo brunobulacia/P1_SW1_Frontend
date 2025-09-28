@@ -1,7 +1,8 @@
 import axios from "axios";
 import { getAuthToken } from "@/store/auth.store";
 
-const baseURL = "http://localhost:4000/api/";
+const baseURL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000/api/";
 const axiosInstance = axios.create({
   baseURL,
   withCredentials: true,
