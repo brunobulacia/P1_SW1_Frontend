@@ -1,7 +1,6 @@
 import { Node, Edge } from "@xyflow/react";
 import { ClassNodeData, RelationType, Method } from "../types/nodes/nodes";
 import { getDiagramById, updateDiagram } from "../api/diagrams";
-// al inicio de src/stores/diagram.store.ts
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 
