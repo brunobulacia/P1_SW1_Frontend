@@ -66,7 +66,7 @@ export function AppSidebar() {
   }
 
   const handleExportSpringBoot = async () => {
-    const res = await getZip();
+    const res = await getZip(currentDiagramId!);
     const url = window.URL.createObjectURL(new Blob([res]));
     const link = document.createElement('a');
     link.href = url;
