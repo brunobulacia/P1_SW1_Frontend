@@ -49,12 +49,14 @@ export default function DiagramPage() {
   // 👇 carga inicial + realtime (API si hay id, localStorage si no)
   useDiagramRealtime(diagramId);
 
-  useEffect(() => {
-    if (!isLoading && nodes.length > 0) {
-      const timer = setTimeout(() => { autoLayout(); }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [nodes.length, edges.length, isLoading, autoLayout]);
+  // Desactivar auto-layout: mantener posiciones de las clases al agregar nuevas
+  // Si en algún momento deseas reactivar, vuelve a habilitar este efecto o agrega un botón que llame a autoLayout() manualmente.
+  // useEffect(() => {
+  //   if (!isLoading && nodes.length > 0) {
+  //     const timer = setTimeout(() => { autoLayout(); }, 300);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [nodes.length, edges.length, isLoading, autoLayout]);
 
   useEffect(() => {
     (window as any).printDiagram = printDiagramToConsole;

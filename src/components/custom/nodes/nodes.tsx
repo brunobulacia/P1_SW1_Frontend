@@ -169,14 +169,35 @@ export const TextUpdaterNode = memo(function TextUpdaterNode(prop: NodeProps) {
   const handleContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
+    // Posicionar el menú anclado a la tarjeta (clase), muy cerca del borde
     const nodeElement = event.currentTarget as HTMLElement;
     const rect = nodeElement.getBoundingClientRect();
-    const x = rect.right + 5;
-    const y = rect.top;
-    const menuWidth = 500;
+
+    const menuWidth = 240;
+    const menuHeight = 320; // aproximado
+    const offset = 6; // separación mínima
+
     const windowWidth = window.innerWidth;
-    const finalX = x + menuWidth > windowWidth ? rect.left - menuWidth - 5 : x;
-    setContextMenu({ x: finalX, y, show: true });
+    const windowHeight = window.innerHeight;
+
+    // Colocar por defecto a la derecha y levemente abajo del top del nodo
+    let x = rect.right + offset;
+    let y = rect.top + offset;
+
+    // Si no hay espacio a la derecha, colocar a la izquierda
+    if (x + menuWidth > windowWidth) {
+      x = rect.left - menuWidth - offset;
+    }
+
+    // Clamping vertical: si se sale por abajo, subirlo
+    if (y + menuHeight > windowHeight) {
+      y = Math.max(windowHeight - menuHeight - offset, 0);
+    }
+
+    // También evitar que quede por encima de la ventana
+    if (y < offset) y = offset;
+
+    setContextMenu({ x, y, show: true });
   };
 
   const closeContextMenu = () => setContextMenu((prev) => ({ ...prev, show: false }));
@@ -212,7 +233,7 @@ export const TextUpdaterNode = memo(function TextUpdaterNode(prop: NodeProps) {
   return (
     <>
       <div
-        className={`bg-white border-gray-800 shadow-lg border-2 min-w-[250px] max-w-[380px] font-mono text-sm cursor-pointer transition-all duration-200 ${
+        className={`bg-white border-gray-800 shadow-lg border-2 w-[360px] overflow-x-hidden font-mono text-sm cursor-pointer transition-all duration-200 ${
           isConnecting && selectedNodeForConnection === prop.id
             ? "border-green-500 shadow-green-200 shadow-lg bg-green-50"
             : isConnecting && selectedNodeForConnection
@@ -361,20 +382,18 @@ export const TextUpdaterNode = memo(function TextUpdaterNode(prop: NodeProps) {
                   type="text"
                   value={method.name}
                   onChange={(e) => updateMethod(method.id, "name", e.target.value)}
-                  className="nodrag bg-transparent border-none outline-none focus:bg-yellow-100 px-1 font-medium"
+                  className="nodrag bg-transparent border-none outline-none focus:bg-yellow-100 px-1 font-medium w-24"
                   placeholder="método"
                   onClick={(e) => e.stopPropagation()}
-                  style={{ width: `${Math.max(method.name.length * 0.6, 4)}rem` }}
                 />
                 <span className="text-gray-500">(</span>
                 <input
                   type="text"
                   value={method.parameters || ""}
                   onChange={(e) => updateMethod(method.id, "parameters", e.target.value)}
-                  className="nodrag bg-transparent border-none outline-none focus:bg-yellow-100 px-1 text-gray-600"
+                  className="nodrag bg-transparent border-none outline-none focus:bg-yellow-100 px-1 text-gray-600 w-16"
                   placeholder=""
                   onClick={(e) => e.stopPropagation()}
-                  style={{ width: `${Math.max((method.parameters || "").length * 0.6, 1)}rem` }}
                 />
                 <span className="text-gray-500">)</span>
                 <>
@@ -383,10 +402,9 @@ export const TextUpdaterNode = memo(function TextUpdaterNode(prop: NodeProps) {
                     type="text"
                     value={method.returnType || ""}
                     onChange={(e) => updateMethod(method.id, "returnType", e.target.value)}
-                    className="nodrag bg-transparent border-none outline-none focus:bg-yellow-100 px-1 text-blue-600"
+                    className="nodrag bg-transparent border-none outline-none focus:bg-yellow-100 px-1 text-blue-600 w-16"
                     placeholder="void"
                     onClick={(e) => e.stopPropagation()}
-                    style={{ width: `${Math.max((method.returnType || "void").length * 0.6, 3)}rem` }}
                   />
                 </>
                 <select
@@ -497,7 +515,7 @@ export const TextUpdaterNode = memo(function TextUpdaterNode(prop: NodeProps) {
       {/* Menú contextual */}
       {contextMenu.show && (
         <div
-          className="fixed bg-white border border-gray-200 rounded-md shadow-xl py-1 min-w-[200px] z-[9999]"
+          className="fixed bg-white border border-gray-200 rounded-md shadow-xl py-2 min-w-[200px] z-[9999]"
           style={{
             left: contextMenu.x, // usa las coords calculadas
             top: contextMenu.y,
