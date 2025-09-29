@@ -6,3 +6,10 @@ export const getZip = async (diagramId: string) => {
   });
   return response.data;
 };
+
+export const getPostman = async (diagramId: string) => {
+  const response = await axios.get(`export/generate-postman/${diagramId}`, {
+    responseType: "blob",
+  });
+  return response.data;
+};

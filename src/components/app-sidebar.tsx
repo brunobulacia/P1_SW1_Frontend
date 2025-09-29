@@ -29,7 +29,7 @@ import {
 import { useState } from "react";
 import { RelationType } from "@/types/nodes/nodes";
 import { useRouter } from "next/navigation";
-import { getZip } from "@/api/exports";
+import { getZip, getPostman } from "@/api/exports";
 
 
 // Elementos (nodos)
@@ -78,8 +78,16 @@ export function AppSidebar() {
   }
 
 
-  const handleExportPostman = () => {
-    console.log("Export Postman clicked");
+  const handleExportPostman = async () => {
+    const res = await getPostman(currentDiagramId!);
+    const url = window.URL.createObjectURL(new Blob([res]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'postman_project.json');
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
+    window.URL.revokeObjectURL(url);  
   }
 
 
