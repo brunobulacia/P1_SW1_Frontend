@@ -12,7 +12,7 @@ import {
 } from "@/components/custom/icons/UMLIcons";
 
 import { useDiagramStore } from "@/store/diagram.store";
-import { HomeIcon, SaveAllIcon, Hand, FileDown, FileJson, Bot } from "lucide-react";
+import { HomeIcon, SaveAllIcon, Hand, FileDown, FileJson, Bot, LogOut } from "lucide-react";
 import { ChatInterface, type Message } from "@/components/chat/chat-interface"
 
 
@@ -32,6 +32,7 @@ import { useState } from "react";
 import { RelationType } from "@/types/nodes/nodes";
 import { useRouter } from "next/navigation";
 import { getZip, getPostman } from "@/api/exports";
+import { useAuthStore } from "@/store/auth.store";
 
 
 // Elementos (nodos)
@@ -57,10 +58,21 @@ export function AppSidebar() {
   const saveDiagramToAPI = useDiagramStore((state) => state.saveDiagramToApi);
   const currentDiagramId = useDiagramStore((state) => state.currentDiagramId);
   const router = useRouter();
+  
+  // Verificar si es colaborador (sin cuenta)
+  const { isCollaborator, isAuthenticated, clearCollaboratorAccess } = useAuthStore();
+  const isCollaboratorOnly = isCollaborator && !isAuthenticated;
 
 
   const handleInicio = () => {
     router.push('/home');
+  }
+
+  const handleSalirColaborador = () => {
+    // Limpiar acceso de colaborador
+    clearCollaboratorAccess();
+    // Redirigir a la página de invitación
+    router.push('/invitation');
   }
 
   const handleSave = async () => {
@@ -221,17 +233,35 @@ export function AppSidebar() {
                         </button>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild>
-                        <button
-                          onClick={handleInicio}
-                          className="w-full"
-                        >
-                          <HomeIcon className="text-lg" />
-                          <span>Volver</span>
-                        </button>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                     {/* Solo mostrar botón "Volver" si NO es colaborador sin cuenta */}
+                     {!isCollaboratorOnly && (
+                       <SidebarMenuItem>
+                        <SidebarMenuButton asChild>
+                          <button
+                            onClick={handleInicio}
+                            className="w-full"
+                          >
+                            <HomeIcon className="text-lg" />
+                            <span>Volver</span>
+                          </button>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                     )}
+                     
+                     {/* Mostrar botón "Salir" solo para colaboradores sin cuenta */}
+                     {isCollaboratorOnly && (
+                       <SidebarMenuItem>
+                        <SidebarMenuButton asChild>
+                          <button
+                            onClick={handleSalirColaborador}
+                            className="w-full"
+                          >
+                            <LogOut className="text-lg" />
+                            <span>Salir</span>
+                          </button>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                     )}
                   </SidebarMenu>
                 </SidebarGroupContent>
                 

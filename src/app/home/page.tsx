@@ -35,7 +35,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthStore } from "@/store/auth.store";
 import { useRouter } from "next/navigation";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AuthenticatedRoute } from "@/components/auth/AuthenticatedRoute";
 import { getDiagramsByUser } from "@/api/diagrams";
 import { CreateDiagramDTO } from "@/types/diagrams/diagrams";
 import {
@@ -378,7 +378,7 @@ export default function DclassMigrator() {
   };
 
   return (
-    <ProtectedRoute>
+    <AuthenticatedRoute>
       <div
         className="min-h-screen bg-background p-6"
         onClick={closeContextMenu}
@@ -813,6 +813,6 @@ export default function DclassMigrator() {
           </div>
         </div>
       </div>
-    </ProtectedRoute>
+    </AuthenticatedRoute>
   );
 }
