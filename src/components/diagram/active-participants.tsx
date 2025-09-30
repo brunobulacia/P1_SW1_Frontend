@@ -34,15 +34,39 @@ export function ActiveParticipants({ diagramId, className = "" }: ActiveParticip
       setParticipants(data.participants || []);
     };
 
+    const handleDisconnect = () => {
+      console.log("🔌 ActiveParticipants: Socket desconectado");
+      // Limpiar participantes cuando se desconecta
+      setParticipants([]);
+    };
+
+    const handleReconnect = () => {
+      console.log("🔌 ActiveParticipants: Socket reconectado");
+      // Solicitar participantes nuevamente al reconectar
+      socket.emit("get-participants", { diagramId });
+    };
+
     // Escuchar actualizaciones de participantes
     socket.on("participants-updated", handleParticipantsUpdate);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("connect", handleReconnect);
 
     // Solicitar lista inicial de participantes
     console.log("🔌 ActiveParticipants: Solicitando participantes para diagrama:", diagramId);
     socket.emit("get-participants", { diagramId });
 
+    // Configurar heartbeat para mantener la conexión activa
+    const heartbeatInterval = setInterval(() => {
+      if (socket.connected) {
+        socket.emit("heartbeat", { diagramId });
+      }
+    }, 30000); // Cada 30 segundos
+
     return () => {
+      clearInterval(heartbeatInterval);
       socket.off("participants-updated", handleParticipantsUpdate);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("connect", handleReconnect);
     };
   }, [diagramId]);
 
