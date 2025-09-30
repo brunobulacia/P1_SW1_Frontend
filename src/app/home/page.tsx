@@ -8,7 +8,6 @@ import {
   Search,
   Plus,
   Trash2,
-  X,
   Edit,
   UserPlus,
   LogOut,
@@ -788,6 +787,7 @@ export default function DclassMigrator() {
                       type="button"
                       variant="outline"
                       onClick={() => setIsAddCollaboratorDialogOpen(false)}
+                      style={{ visibility: btnVisibility as any }}
                     >
                       Cancelar
                     </Button>

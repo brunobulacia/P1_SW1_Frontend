@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getAuthToken } from "@/store/auth.store";
+import { useAuthStore } from "@/store/auth.store";
 
 const baseURL =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000/api/";
@@ -9,10 +9,17 @@ const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use((config) => {
-  const token = getAuthToken();
-  if (token) {
-    config.headers.set("Authorization", `Bearer ${token}`);
+  const { accessToken, isCollaborator, collaboratorToken } = useAuthStore.getState();
+  
+  // Si es usuario autenticado, usar token de autenticación
+  if (accessToken) {
+    config.headers.set("Authorization", `Bearer ${accessToken}`);
   }
+  // Si es colaborador, usar token de invitación
+  else if (isCollaborator && collaboratorToken) {
+    config.headers.set("Authorization", `Bearer ${collaboratorToken}`);
+  }
+  
   return config;
 });
 

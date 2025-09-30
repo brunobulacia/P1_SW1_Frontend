@@ -20,33 +20,33 @@ export function ProtectedRoute({
   fallback 
 }: ProtectedRouteProps) {
   const router = useRouter();
-  const { isAuthenticated, checkAuthStatus } = useAuthStore();
+  const { isAuthenticated, checkAuthStatus, hasAccess } = useAuthStore();
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
     const checkAuth = () => {
-      // Verificar el estado de autenticación
-      const isValid = checkAuthStatus();
+      // Verificar si tiene acceso (usuario autenticado o colaborador)
+      const hasValidAccess = hasAccess();
       
-      if (!isValid) {
-        // Redirigir al login si no está autenticado
+      if (!hasValidAccess) {
+        // Redirigir al login si no tiene acceso
         router.push(redirectTo);
       } else {
-        // Usuario autenticado, continuar
+        // Tiene acceso, continuar
         setIsChecking(false);
       }
     };
 
     // Ejecutar verificación
     checkAuth();
-  }, [checkAuthStatus, router, redirectTo]);
+  }, [hasAccess, router, redirectTo]);
 
   // Mostrar fallback mientras se verifica la autenticación
-  if (isChecking || !isAuthenticated) {
+  if (isChecking || !hasAccess()) {
     return fallback || <AuthLoadingFallback />;
   }
 
-  // Usuario autenticado, mostrar contenido protegido
+  // Tiene acceso, mostrar contenido protegido
   return <>{children}</>;
 }
 

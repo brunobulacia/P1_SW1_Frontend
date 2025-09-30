@@ -17,6 +17,10 @@ interface AuthStore {
   user: AuthUser; // Nunca será null
   isLoading: boolean;
   error: string | null;
+  // Estado para colaboradores
+  isCollaborator: boolean;
+  collaboratorToken: string | null;
+  collaboratorDiagramId: string | null;
 
   // Acciones
   login: (credentials: LoginCredentials) => Promise<boolean>;
@@ -27,6 +31,10 @@ interface AuthStore {
   setError: (error: string | null) => void;
   checkAuthStatus: () => boolean;
   getAuthHeaders: () => { Authorization?: string };
+  // Acciones para colaboradores
+  setCollaboratorAccess: (token: string, diagramId: string) => void;
+  clearCollaboratorAccess: () => void;
+  hasAccess: () => boolean; // Verifica si tiene acceso (usuario autenticado o colaborador)
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -38,6 +46,10 @@ export const useAuthStore = create<AuthStore>()(
       user: DEFAULT_USER,
       isLoading: false,
       error: null,
+      // Estado inicial para colaboradores
+      isCollaborator: false,
+      collaboratorToken: null,
+      collaboratorDiagramId: null,
 
       // Establecer autenticación desde respuesta de login
       setAuth: (loginResponse: LoginResponse) => {
@@ -102,6 +114,10 @@ export const useAuthStore = create<AuthStore>()(
           accessToken: null,
           user: DEFAULT_USER,
           error: null,
+          // También limpiar estado de colaborador
+          isCollaborator: false,
+          collaboratorToken: null,
+          collaboratorDiagramId: null,
         });
       },
 
@@ -112,6 +128,10 @@ export const useAuthStore = create<AuthStore>()(
           accessToken: null,
           user: DEFAULT_USER,
           error: null,
+          // También limpiar estado de colaborador
+          isCollaborator: false,
+          collaboratorToken: null,
+          collaboratorDiagramId: null,
         });
       },
 
@@ -150,6 +170,38 @@ export const useAuthStore = create<AuthStore>()(
 
         return {};
       },
+
+      // Establecer acceso de colaborador
+      setCollaboratorAccess: (token: string, diagramId: string) => {
+        set({
+          isCollaborator: true,
+          collaboratorToken: token,
+          collaboratorDiagramId: diagramId,
+          error: null,
+        });
+      },
+
+      // Limpiar acceso de colaborador
+      clearCollaboratorAccess: () => {
+        set({
+          isCollaborator: false,
+          collaboratorToken: null,
+          collaboratorDiagramId: null,
+        });
+      },
+
+      // Verificar si tiene acceso (usuario autenticado o colaborador)
+      hasAccess: () => {
+        const { isAuthenticated, accessToken, user, isCollaborator, collaboratorToken } = get();
+        
+        // Usuario autenticado válido
+        const isAuthenticatedUser = !!(accessToken && user.id);
+        
+        // Colaborador con token válido
+        const isCollaboratorUser = !!(isCollaborator && collaboratorToken);
+        
+        return isAuthenticatedUser || isCollaboratorUser;
+      },
     }),
     {
       name: "auth-storage", // nombre del key en localStorage
@@ -159,6 +211,10 @@ export const useAuthStore = create<AuthStore>()(
         isAuthenticated: state.isAuthenticated,
         accessToken: state.accessToken,
         user: state.user,
+        // Persistir también el estado de colaborador
+        isCollaborator: state.isCollaborator,
+        collaboratorToken: state.collaboratorToken,
+        collaboratorDiagramId: state.collaboratorDiagramId,
       }),
     }
   )
@@ -174,6 +230,8 @@ export const useAuth = () => {
       authStore.isAuthenticated &&
       !!authStore.accessToken &&
       !!authStore.user.id,
+    // Incluir la nueva función hasAccess
+    hasAccess: authStore.hasAccess(),
   };
 };
 

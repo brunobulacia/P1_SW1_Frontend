@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { getDiagramByInvitationToken } from "@/api/invitations";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/auth.store";
 
 interface InvitationForm {
   token: string;
@@ -22,14 +23,25 @@ interface InvitationForm {
 export default function InvitationPage() {
   const router = useRouter();
   const { register, handleSubmit } = useForm<InvitationForm>();
+  const { setCollaboratorAccess } = useAuthStore();
 
   const handleAction = async (data: InvitationForm) => {
     console.log("Unirse al diagrama", data);
 
-    const diagram = await getDiagramByInvitationToken(data.token);
-    console.log("Diagrama obtenido:", diagram);
-    if (diagram && diagram.id) {
-      router.push(`/diagram/?id=${diagram.id}`);
+    try {
+      const diagram = await getDiagramByInvitationToken(data.token);
+      console.log("Diagrama obtenido:", diagram);
+      
+      if (diagram && diagram.id) {
+        // Establecer acceso de colaborador en el store
+        setCollaboratorAccess(data.token, diagram.id);
+        
+        // Redirigir al diagrama
+        router.push(`/diagram/?id=${diagram.id}`);
+      }
+    } catch (error) {
+      console.error("Error al unirse al diagrama:", error);
+      // Aquí podrías mostrar un mensaje de error al usuario
     }
   };
 
