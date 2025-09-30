@@ -497,19 +497,22 @@ export const TextUpdaterNode = memo(function TextUpdaterNode(prop: NodeProps) {
           </div>
         )}
 
-        {/* Handles */}
-        <Handle type="target" position={Position.Top} id="top" style={{ opacity: 0, pointerEvents: "none", left: "50%" }} />
+        {/* Handles - Ocultos pero funcionales */}
+        {/* Top handles */}
+        <Handle type="target" position={Position.Top} id="top-target" style={{ opacity: 0, pointerEvents: "none", left: "50%" }} />
+        <Handle type="source" position={Position.Top} id="top-source" style={{ opacity: 0, pointerEvents: "none", left: "50%" }} />
+        
+        {/* Bottom handles - CRÍTICO: Necesitamos tanto source como target con id="bottom" */}
+        <Handle type="target" position={Position.Bottom} id="bottom" style={{ opacity: 0, pointerEvents: "none", left: "50%" }} />
         <Handle type="source" position={Position.Bottom} id="bottom" style={{ opacity: 0, pointerEvents: "none", left: "50%" }} />
-        <Handle type="target" position={Position.Left} id="left" style={{ opacity: 0, pointerEvents: "none", top: "50%" }} />
+        
+        {/* Left handles */}
+        <Handle type="target" position={Position.Left} id="left-target" style={{ opacity: 0, pointerEvents: "none", top: "50%" }} />
+        <Handle type="source" position={Position.Left} id="left-source" style={{ opacity: 0, pointerEvents: "none", top: "50%" }} />
+        
+        {/* Right handles */}
+        <Handle type="target" position={Position.Right} id="right-target" style={{ opacity: 0, pointerEvents: "none", top: "50%" }} />
         <Handle type="source" position={Position.Right} id="right" style={{ opacity: 0, pointerEvents: "none", top: "50%" }} />
-        <Handle type="target" position={Position.Top} id="top-left" style={{ opacity: 0, pointerEvents: "none", left: "25%" }} />
-        <Handle type="target" position={Position.Top} id="top-right" style={{ opacity: 0, pointerEvents: "none", left: "75%" }} />
-        <Handle type="source" position={Position.Bottom} id="bottom-left" style={{ opacity: 0, pointerEvents: "none", left: "25%" }} />
-        <Handle type="source" position={Position.Bottom} id="bottom-right" style={{ opacity: 0, pointerEvents: "none", left: "75%" }} />
-        <Handle type="target" position={Position.Left} id="left-top" style={{ opacity: 0, pointerEvents: "none", top: "25%" }} />
-        <Handle type="target" position={Position.Left} id="left-bottom" style={{ opacity: 0, pointerEvents: "none", top: "75%" }} />
-        <Handle type="source" position={Position.Right} id="right-top" style={{ opacity: 0, pointerEvents: "none", top: "25%" }} />
-        <Handle type="source" position={Position.Right} id="right-bottom" style={{ opacity: 0, pointerEvents: "none", top: "75%" }} />
       </div>
 
       {/* Menú contextual */}

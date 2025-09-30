@@ -46,6 +46,7 @@ export function ChatInterface({
 
   const [input, setInput] = useState("")
   const [isOpen, setIsOpen] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -61,10 +62,12 @@ export function ChatInterface({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (input.trim() && !isLoading) {
+    if (input.trim() && !isLoading && !isGenerating) {
       const userMessage = input.trim()
       onSendMessage(userMessage) // Renderizar mensaje del usuario
       setInput("")
+      setIsGenerating(true) // Activar estado de carga
+      
       // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto"
@@ -81,6 +84,7 @@ export function ChatInterface({
         // Generar diagrama
         socket?.emit("generate-diagram", { prompt: userMessage, diagramId })
         socket?.on("diagram-generated", (data: { success: boolean; diagram?: any; message?: string; error?: string }) => {
+          setIsGenerating(false) // Desactivar estado de carga
           if (data.success) {
             onSendAssistantMessage(`✅ ${data.message}`)
             if (data.diagram && onDiagramGenerated) {
@@ -94,6 +98,7 @@ export function ChatInterface({
         // Chat normal
         socket?.emit("generate-agent", { prompt: userMessage })
         socket?.on("agent-generated", (data: { text: string }) => {
+          setIsGenerating(false) // Desactivar estado de carga
           onSendAssistantMessage(data.text) // Renderizar respuesta del agente
         })
       }
@@ -185,19 +190,22 @@ export function ChatInterface({
                   ))
                 )}
 
-                {isLoading && (
+                {(isLoading || isGenerating) && (
                   <div className="flex gap-2 items-start">
-                    <Avatar className="w-7 h-7 shrink-0 bg-primary text-primary-foreground">
+                    <Avatar className="w-7 h-7 shrink-0 bg-blue-100 text-blue-900 border border-blue-200">
                       <AvatarFallback>
                         <Bot className="w-3.5 h-3.5" />
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col gap-1">
-                      <div className="rounded-2xl px-3 py-2 bg-card text-card-foreground border border-border">
-                        <div className="flex gap-1">
-                          <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]" />
-                          <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]" />
-                          <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" />
+                      <div className="rounded-2xl px-3 py-2 bg-blue-100 text-blue-900 border border-blue-200">
+                        <div className="flex gap-1 items-center">
+                          <span className="w-1.5 h-1.5 bg-blue-700 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                          <span className="w-1.5 h-1.5 bg-blue-700 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                          <span className="w-1.5 h-1.5 bg-blue-700 rounded-full animate-bounce" />
+                          <span className="text-xs ml-2 text-blue-700">
+                            {isGenerating ? 'Generando respuesta...' : 'Cargando...'}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -217,7 +225,7 @@ export function ChatInterface({
                       onChange={handleTextareaChange}
                       onKeyDown={handleKeyDown}
                       placeholder={placeholder}
-                      disabled={isLoading}
+                      disabled={isLoading || isGenerating}
                       className="min-h-[44px] max-h-[120px] resize-none text-xs leading-relaxed"
                       rows={1}
                     />
@@ -225,7 +233,7 @@ export function ChatInterface({
                   <Button
                     type="submit"
                     size="icon"
-                    disabled={!input.trim() || isLoading}
+                    disabled={!input.trim() || isLoading || isGenerating}
                     className="h-[44px] w-[44px] shrink-0"
                   >
                     <Send className="w-3.5 h-3.5" />

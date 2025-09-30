@@ -117,8 +117,40 @@ export default function DiagramPage() {
 
   const handleDiagramGenerated = (diagram: any) => {
     // Actualizar el store del diagrama con el nuevo diagrama generado
+    console.log('🎨 Frontend recibió diagrama:', diagram);
+    console.log('📊 Nodos:', diagram.nodes?.length || 0);
+    console.log('🔗 Edges:', diagram.edges?.length || 0);
+    console.log('📋 Detalle edges:', diagram.edges);
+    
+    // Verificar el formato de cada edge
+    if (diagram.edges && diagram.edges.length > 0) {
+      console.log('🔍 Análisis de edges:');
+      diagram.edges.forEach((edge: any, index: number) => {
+        console.log(`  Edge ${index}:`, {
+          id: edge.id,
+          type: edge.type,
+          source: edge.source,
+          target: edge.target,
+          data: edge.data,
+          hasRequiredFields: !!(edge.id && edge.source && edge.target)
+        });
+      });
+    }
+    
+    // Verificar el estado actual del store
+    console.log('🔍 Estado actual del store:');
+    console.log('  - Nodos en store:', nodes.length);
+    console.log('  - Edges en store:', edges.length);
+    
     setNodes(diagram.nodes || []);
     setEdges(diagram.edges || []);
+    
+    // Verificar el estado después de la actualización
+    setTimeout(() => {
+      console.log('✅ Estado después de actualización:');
+      console.log('  - Nodos en store:', nodes.length);
+      console.log('  - Edges en store:', edges.length);
+    }, 100);
     
     // Opcional: mostrar notificación de éxito
     console.log('Diagrama generado exitosamente:', diagram);
