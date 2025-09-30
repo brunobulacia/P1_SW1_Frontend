@@ -115,6 +115,15 @@ export default function DiagramPage() {
     setMessages((prev) => [...prev, assistantMessage]);
   };
 
+  const handleDiagramGenerated = (diagram: any) => {
+    // Actualizar el store del diagrama con el nuevo diagrama generado
+    setNodes(diagram.nodes || []);
+    setEdges(diagram.edges || []);
+    
+    // Opcional: mostrar notificación de éxito
+    console.log('Diagrama generado exitosamente:', diagram);
+  };
+
   return (
     <ProtectedRoute>
       <div className="flex h-screen w-screen">
@@ -192,6 +201,8 @@ export default function DiagramPage() {
           messages={messages}
           onSendMessage={handleSendMessage}
           onSendAssistantMessage={handleSendAssistantMessage}
+          onDiagramGenerated={handleDiagramGenerated}
+          diagramId={diagramId || undefined}
           isLoading={isLoading}
           placeholder="Inserta un mensaje..."
         />

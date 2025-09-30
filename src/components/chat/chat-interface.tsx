@@ -24,6 +24,8 @@ interface ChatInterfaceProps {
   messages: Message[]
   onSendMessage: (message: string) => void
   onSendAssistantMessage: (message: string) => void
+  onDiagramGenerated?: (diagram: any) => void
+  diagramId?: string
   isLoading?: boolean
   placeholder?: string
   className?: string
@@ -33,6 +35,8 @@ export function ChatInterface({
   messages,
   onSendMessage,
   onSendAssistantMessage,
+  onDiagramGenerated,
+  diagramId,
   isLoading = false,
   placeholder = "Inserta un mensaje...",
   className,
@@ -65,10 +69,34 @@ export function ChatInterface({
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto"
       }
-      socket?.emit("generate-agent", { prompt: userMessage })
-      socket?.on("agent-generated", (data: { text: string }) => {
-        onSendAssistantMessage(data.text) // Renderizar respuesta del agente
-      })
+
+      // Detectar si es un comando para generar diagrama
+      const isDiagramCommand = userMessage.toLowerCase().includes('genera') || 
+                              userMessage.toLowerCase().includes('crea') || 
+                              userMessage.toLowerCase().includes('diagrama') ||
+                              userMessage.toLowerCase().includes('clases') ||
+                              userMessage.toLowerCase().includes('uml')
+
+      if (isDiagramCommand && diagramId) {
+        // Generar diagrama
+        socket?.emit("generate-diagram", { prompt: userMessage, diagramId })
+        socket?.on("diagram-generated", (data: { success: boolean; diagram?: any; message?: string; error?: string }) => {
+          if (data.success) {
+            onSendAssistantMessage(`✅ ${data.message}`)
+            if (data.diagram && onDiagramGenerated) {
+              onDiagramGenerated(data.diagram)
+            }
+          } else {
+            onSendAssistantMessage(`❌ ${data.error || 'Error al generar el diagrama'}`)
+          }
+        })
+      } else {
+        // Chat normal
+        socket?.emit("generate-agent", { prompt: userMessage })
+        socket?.on("agent-generated", (data: { text: string }) => {
+          onSendAssistantMessage(data.text) // Renderizar respuesta del agente
+        })
+      }
     }
   }
 
