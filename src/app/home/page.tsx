@@ -30,6 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -222,6 +223,13 @@ export default function DclassMigrator() {
     e?.preventDefault();
     if (collaboratorDiagram) {
       try {
+        // Limpiar estado previo antes de generar nuevo token
+        setCollaboratorValue("token", "");
+        setBtnVisibility("visible");
+        
+        // Limpiar listener previo para evitar duplicados
+        socket?.off("invite-created");
+        
         socket?.emit("generate-invite", { diagramId: collaboratorDiagram.id });
         setIsAddCollaboratorDialogOpen(true);
         setCollaboratorDiagram(collaboratorDiagram);
@@ -735,70 +743,129 @@ export default function DclassMigrator() {
 
           <Dialog
             open={isAddCollaboratorDialogOpen}
-            onOpenChange={setIsAddCollaboratorDialogOpen}
+            onOpenChange={(open) => {
+              setIsAddCollaboratorDialogOpen(open);
+              if (!open) {
+                // Limpiar estado cuando se cierra el modal
+                setCollaboratorValue("token", "");
+                setBtnVisibility("visible");
+                setCollaboratorDiagram(null);
+                resetCollaborator();
+                // Limpiar listener de socket
+                socket?.off("invite-created");
+              }
+            }}
           >
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle>Agregar Colaborador</DialogTitle>
+                <DialogTitle className="text-xl font-semibold text-gray-900">
+                  Invitar Colaborador
+                </DialogTitle>
+                <DialogDescription className="text-sm text-gray-600 mt-2">
+                  Comparte este enlace con la persona que quieres invitar al diagrama. 
+                  Ella podrá acceder sin necesidad de crear una cuenta.
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={onCollaboratorDiagram}>
-                <div>
-                  <div className="flex flex-col">
-                    <div className="grid gap-4 py-4">
-                      <Label
-                        htmlFor="collaborator-email"
-                        className="text-right"
-                      >
-                        Generar Enlace
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          id="token"
-                          type="text"
-                          placeholder="Token..."
-                          className="col-span-3"
-                          {...registerCollaborator("token")}
-                          readOnly
-                        />
-                        <Button
-                          type="button"
-                          variant="default"
-                          size="icon"
-                          className="bg-blue-500 hover:bg-blue-600 text-white hover:text-white hover:cursor-pointer"
-                          onClick={() => {
-                            const token = watchCollaborator("token");
-                            if (token) {
-                              navigator.clipboard.writeText(token);
-                            } else {
-                              navigator.clipboard.writeText("No hay token disponible");
-                            }
-                          }}
-                          aria-label="Copiar token"
-                        >
-                          <Clipboard className="h-10 w-10" />
-                        </Button>
+                <div className="space-y-6">
+                  {/* Sección de información del diagrama */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          Diagrama: {collaboratorDiagram?.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          ID: {collaboratorDiagram?.id}
+                        </p>
                       </div>
                     </div>
                   </div>
-                </div>
-                <DialogFooter>
-                  <div className=" w-full flex justify-between">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsAddCollaboratorDialogOpen(false)}
-                      style={{ visibility: btnVisibility as any }}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="ml-4"
-                      style={{ visibility: btnVisibility as any }}
-                    >
-                      Generar Token
-                    </Button>
+
+                  {/* Sección de enlace de invitación */}
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
+                      <Label className="text-sm font-medium text-gray-900">
+                        Enlace de invitación
+                      </Label>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                      <p className="text-xs text-gray-600 mb-2">
+                        Comparte este enlace con tu colaborador:
+                      </p>
+                      <p className="text-sm font-mono text-blue-600 break-all">
+                        http://54.207.207.246:3000/invitation
+                      </p>
+                    </div>
                   </div>
+
+                  {/* Sección de token */}
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-1 h-6 bg-green-500 rounded-full"></div>
+                      <Label className="text-sm font-medium text-gray-900">
+                        Token de acceso
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="token"
+                        type="text"
+                        placeholder="Haz clic en 'Generar Token' para crear un enlace de invitación..."
+                        className="flex-1 font-mono text-sm"
+                        {...registerCollaborator("token")}
+                        readOnly
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200 hover:border-green-300"
+                        onClick={() => {
+                          const token = watchCollaborator("token");
+                          if (token) {
+                            navigator.clipboard.writeText(token);
+                            // Aquí podrías agregar una notificación de éxito
+                          } else {
+                            navigator.clipboard.writeText("No hay token disponible");
+                          }
+                        }}
+                        aria-label="Copiar token"
+                      >
+                        <Clipboard className="h-4 w-4 mr-1" />
+                        Copiar
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 mt-5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                    onClick={() => {
+                      setIsAddCollaboratorDialogOpen(false);
+                      // Limpiar estado al cancelar
+                      setCollaboratorValue("token", "");
+                      setBtnVisibility("visible");
+                      setCollaboratorDiagram(null);
+                      resetCollaborator();
+                      // Limpiar listener de socket
+                      socket?.off("invite-created");
+                    }}
+                  >
+                    Cerrar
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white"
+                    style={{ visibility: btnVisibility as any }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Generar Token
+                  </Button>
                 </DialogFooter>
               </form>
             </DialogContent>
