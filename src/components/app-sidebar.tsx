@@ -12,7 +12,9 @@ import {
 } from "@/components/custom/icons/UMLIcons";
 
 import { useDiagramStore } from "@/store/diagram.store";
-import { HomeIcon, SaveAllIcon, Hand, FileDown, FileJson } from "lucide-react";
+import { HomeIcon, SaveAllIcon, Hand, FileDown, FileJson, Bot } from "lucide-react";
+import { ChatInterface, type Message } from "@/components/chat/chat-interface"
+
 
 
 import {
@@ -109,6 +111,12 @@ export function AppSidebar() {
     setConnectionMode(null);
   };
 
+  const handleSelectAgent = () => {
+    console.log("Agente Inteligente");
+    setSelectedTool(null);
+    setConnectionMode(null);
+  }
+
   return (
     <Sidebar>
       <SidebarContent>
@@ -125,6 +133,16 @@ export function AppSidebar() {
                   >
                     <Hand className="text-lg" />
                     <span>Seleccionar</span>
+                  </button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+                <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <button 
+                    onClick={handleSelectAgent}
+                  >
+                    <Bot className="text-lg" />
+                    <span>Agente Inteligente</span>
                   </button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -226,6 +244,7 @@ export function AppSidebar() {
                     </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroupContent>
+                
               </SidebarGroup>
 
       </SidebarContent>

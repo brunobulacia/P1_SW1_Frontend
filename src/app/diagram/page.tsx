@@ -11,13 +11,21 @@ import {
   ConnectionMode,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { TextUpdaterNode } from "@/components/custom/nodes/nodes";
-import { AssociationEdge, AggregationEdge, CompositionEdge, InheritanceEdge, DependencyEdge, RealizationEdge } from "@/components/custom/edges/UMLEdges";
+import {
+  AssociationEdge,
+  AggregationEdge,
+  CompositionEdge,
+  InheritanceEdge,
+  DependencyEdge,
+  RealizationEdge,
+} from "@/components/custom/edges/UMLEdges";
 import { useDiagramStore } from "@/store/diagram.store";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useDiagramRealtime } from "@/hooks/useDiagramRealtime";
+import { ChatInterface, type Message } from "@/components/chat/chat-interface";
 
 const nodeTypes = { textUpdater: TextUpdaterNode };
 const edgeTypes = {
@@ -28,12 +36,12 @@ const edgeTypes = {
   dependency: DependencyEdge,
   realization: RealizationEdge,
 };
-const rfStyle = { backgroundColor: '#f0f0f0' };
+const rfStyle = { backgroundColor: "#f0f0f0" };
 
 export default function DiagramPage() {
   const searchParams = useSearchParams();
-  const diagramId = searchParams.get('id');
-
+  const diagramId = searchParams.get("id");
+  const [messages, setMessages] = useState<Message[]>([]);
   const nodes = useDiagramStore((state) => state.nodes);
   const edges = useDiagramStore((state) => state.edges);
   const setNodes = useDiagramStore((state) => state.setNodes);
@@ -44,7 +52,9 @@ export default function DiagramPage() {
   const addEdgeToStore = useDiagramStore((state) => state.addEdge);
   const autoLayout = useDiagramStore((state) => state.autoLayout);
   const isLoading = useDiagramStore((state) => state.isLoading);
-  const printDiagramToConsole = useDiagramStore((state) => state.printDiagramToConsole);
+  const printDiagramToConsole = useDiagramStore(
+    (state) => state.printDiagramToConsole
+  );
 
   // 👇 carga inicial + realtime (API si hay id, localStorage si no)
   useDiagramRealtime(diagramId);
@@ -76,7 +86,7 @@ export default function DiagramPage() {
       if (connectionMode && connection.source && connection.target) {
         addEdgeToStore(connection.source, connection.target, connectionMode);
       } else if (connection.source && connection.target) {
-        addEdgeToStore(connection.source, connection.target, 'association');
+        addEdgeToStore(connection.source, connection.target, "association");
       }
     },
     [connectionMode, addEdgeToStore]
@@ -84,6 +94,26 @@ export default function DiagramPage() {
   const handlePaneClick = useCallback(() => {
     if (isConnecting || connectionMode) resetConnection();
   }, [isConnecting, connectionMode, resetConnection]);
+
+  const handleSendMessage = async (content: string) => {
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+  };
+
+  const handleSendAssistantMessage = async (content: string) => {
+    const assistantMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, assistantMessage]);
+  };
 
   return (
     <ProtectedRoute>
@@ -93,7 +123,9 @@ export default function DiagramPage() {
             <div className="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               <span className="text-lg font-medium">
-                {diagramId ? `Cargando diagrama ${diagramId}...` : 'Cargando diagrama...'}
+                {diagramId
+                  ? `Cargando diagrama ${diagramId}...`
+                  : "Cargando diagrama..."}
               </span>
             </div>
           </div>
@@ -103,7 +135,10 @@ export default function DiagramPage() {
           <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-orange-600 text-white px-4 py-2 rounded-lg shadow-lg">
             <div className="flex items-center space-x-2">
               <div className="animate-pulse w-2 h-2 bg-white rounded-full"></div>
-              <span>Paso 1: Click en ORIGEN para la relación "{connectionMode}" - ESC para cancelar</span>
+              <span>
+                Paso 1: Click en ORIGEN para la relación "{connectionMode}" -
+                ESC para cancelar
+              </span>
             </div>
           </div>
         )}
@@ -111,7 +146,10 @@ export default function DiagramPage() {
           <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg">
             <div className="flex items-center space-x-2">
               <div className="animate-pulse w-2 h-2 bg-white rounded-full"></div>
-              <span>Paso 2: Click en DESTINO para crear la relación "{connectionMode}" - ESC para cancelar</span>
+              <span>
+                Paso 2: Click en DESTINO para crear la relación "
+                {connectionMode}" - ESC para cancelar
+              </span>
             </div>
           </div>
         )}
@@ -121,7 +159,10 @@ export default function DiagramPage() {
           </div>
         )}
 
-        <div className="flex-1 h-screen" style={{ width: '100%', height: '100vh', minHeight: '100vh' }}>
+        <div
+          className="flex-1 h-screen"
+          style={{ width: "100%", height: "100vh", minHeight: "100vh" }}
+        >
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -131,15 +172,28 @@ export default function DiagramPage() {
             onPaneClick={handlePaneClick}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
-            connectionMode={connectionMode ? ConnectionMode.Loose : ConnectionMode.Strict}
+            connectionMode={
+              connectionMode ? ConnectionMode.Loose : ConnectionMode.Strict
+            }
             snapToGrid
             snapGrid={[20, 20]}
-            style={{ ...rfStyle, width: '100%', height: '100%' }}
+            style={{ ...rfStyle, width: "100%", height: "100%" }}
           >
             <Controls />
-            <Background variant={BackgroundVariant.Lines} gap={50} size={1} color="#ddd" />
+            <Background
+              variant={BackgroundVariant.Lines}
+              gap={50}
+              size={1}
+              color="#ddd"
+            />
           </ReactFlow>
         </div>
+        <ChatInterface
+          messages={messages}
+          onSendMessage={handleSendAssistantMessage}
+          isLoading={isLoading}
+          placeholder="Inserta un mensaje..."
+        />
       </div>
     </ProtectedRoute>
   );
