@@ -26,6 +26,7 @@ import { useDiagramStore } from "@/store/diagram.store";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useDiagramRealtime } from "@/hooks/useDiagramRealtime";
 import { ChatInterface, type Message } from "@/components/chat/chat-interface";
+import { ActiveParticipants } from "@/components/diagram/active-participants";
 
 const nodeTypes = { textUpdater: TextUpdaterNode };
 const edgeTypes = {
@@ -195,8 +196,11 @@ export default function DiagramPage() {
           </div>
         )}
         {diagramId && !isLoading && (
-          <div className="fixed top-4 right-4 z-40 bg-green-600 text-white px-3 py-1 rounded-lg shadow-lg text-sm">
-            Diagrama: {diagramId}
+          <div className="fixed top-4 right-4 z-40 flex items-center space-x-3">
+            <ActiveParticipants diagramId={diagramId} />
+            <div className="bg-green-600 text-white px-3 py-1 rounded-lg shadow-lg text-sm">
+              Diagrama: {diagramId}
+            </div>
           </div>
         )}
 
