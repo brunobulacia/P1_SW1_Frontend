@@ -23,6 +23,7 @@ export interface Message {
 interface ChatInterfaceProps {
   messages: Message[]
   onSendMessage: (message: string) => void
+  onSendAssistantMessage: (message: string) => void
   isLoading?: boolean
   placeholder?: string
   className?: string
@@ -31,6 +32,7 @@ interface ChatInterfaceProps {
 export function ChatInterface({
   messages,
   onSendMessage,
+  onSendAssistantMessage,
   isLoading = false,
   placeholder = "Inserta un mensaje...",
   className,
@@ -65,7 +67,7 @@ export function ChatInterface({
       }
       socket?.emit("generate-agent", { prompt: userMessage })
       socket?.on("agent-generated", (data: { text: string }) => {
-        onSendMessage(data.text) // Renderizar respuesta del agente
+        onSendAssistantMessage(data.text) // Renderizar respuesta del agente
       })
     }
   }
@@ -143,8 +145,8 @@ export function ChatInterface({
                         <div
                           className={cn(
                             "rounded-2xl px-3 py-2 text-xs leading-relaxed max-w-full overflow-hidden",
-                            message.role === "assistant" && "bg-card text-card-foreground border border-border",
-                            message.role === "user" && "bg-primary text-primary-foreground",
+                            message.role === "assistant" && "bg-blue-100 text-blue-900 border border-blue-200",
+                            message.role === "user" && "bg-green-500 text-white",
                           )}
                         >
                           <p className="whitespace-pre-wrap text-pretty break-words overflow-wrap-anywhere max-w-full">{message.content}</p>

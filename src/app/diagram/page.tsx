@@ -108,7 +108,7 @@ export default function DiagramPage() {
   const handleSendAssistantMessage = async (content: string) => {
     const assistantMessage: Message = {
       id: Date.now().toString(),
-      role: "user",
+      role: "assistant",
       content,
       timestamp: new Date(),
     };
@@ -190,7 +190,8 @@ export default function DiagramPage() {
         </div>
         <ChatInterface
           messages={messages}
-          onSendMessage={handleSendAssistantMessage}
+          onSendMessage={handleSendMessage}
+          onSendAssistantMessage={handleSendAssistantMessage}
           isLoading={isLoading}
           placeholder="Inserta un mensaje..."
         />
