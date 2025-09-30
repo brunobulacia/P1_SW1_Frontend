@@ -497,21 +497,21 @@ export const TextUpdaterNode = memo(function TextUpdaterNode(prop: NodeProps) {
           </div>
         )}
 
-        {/* Handles - Ocultos pero funcionales */}
+        {/* Handles - Ocultos pero funcionales - TODAS las combinaciones necesarias */}
         {/* Top handles */}
-        <Handle type="target" position={Position.Top} id="top-target" style={{ opacity: 0, pointerEvents: "none", left: "50%" }} />
-        <Handle type="source" position={Position.Top} id="top-source" style={{ opacity: 0, pointerEvents: "none", left: "50%" }} />
+        <Handle type="target" position={Position.Top} id="top" style={{ opacity: 0, pointerEvents: "none", left: "50%" }} />
+        <Handle type="source" position={Position.Top} id="top" style={{ opacity: 0, pointerEvents: "none", left: "50%" }} />
         
-        {/* Bottom handles - CRÍTICO: Necesitamos tanto source como target con id="bottom" */}
+        {/* Bottom handles */}
         <Handle type="target" position={Position.Bottom} id="bottom" style={{ opacity: 0, pointerEvents: "none", left: "50%" }} />
         <Handle type="source" position={Position.Bottom} id="bottom" style={{ opacity: 0, pointerEvents: "none", left: "50%" }} />
         
         {/* Left handles */}
-        <Handle type="target" position={Position.Left} id="left-target" style={{ opacity: 0, pointerEvents: "none", top: "50%" }} />
-        <Handle type="source" position={Position.Left} id="left-source" style={{ opacity: 0, pointerEvents: "none", top: "50%" }} />
+        <Handle type="target" position={Position.Left} id="left" style={{ opacity: 0, pointerEvents: "none", top: "50%" }} />
+        <Handle type="source" position={Position.Left} id="left" style={{ opacity: 0, pointerEvents: "none", top: "50%" }} />
         
         {/* Right handles */}
-        <Handle type="target" position={Position.Right} id="right-target" style={{ opacity: 0, pointerEvents: "none", top: "50%" }} />
+        <Handle type="target" position={Position.Right} id="right" style={{ opacity: 0, pointerEvents: "none", top: "50%" }} />
         <Handle type="source" position={Position.Right} id="right" style={{ opacity: 0, pointerEvents: "none", top: "50%" }} />
       </div>
 

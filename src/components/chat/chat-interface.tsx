@@ -60,6 +60,37 @@ export function ChatInterface({
     }
   }, [messages])
 
+  // Configurar listeners de socket una sola vez
+  useEffect(() => {
+    if (!socket) return
+
+    const handleDiagramGenerated = (data: { success: boolean; diagram?: any; message?: string; error?: string }) => {
+      setIsGenerating(false) // Desactivar estado de carga
+      if (data.success) {
+        onSendAssistantMessage(`✅ ${data.message}`)
+        if (data.diagram && onDiagramGenerated) {
+          onDiagramGenerated(data.diagram)
+        }
+      } else {
+        onSendAssistantMessage(`❌ ${data.error || 'Error al generar el diagrama'}`)
+      }
+    }
+
+    const handleAgentGenerated = (data: { text: string }) => {
+      setIsGenerating(false) // Desactivar estado de carga
+      onSendAssistantMessage(data.text) // Renderizar respuesta del agente
+    }
+
+    socket.on("diagram-generated", handleDiagramGenerated)
+    socket.on("agent-generated", handleAgentGenerated)
+
+    // Cleanup
+    return () => {
+      socket.off("diagram-generated", handleDiagramGenerated)
+      socket.off("agent-generated", handleAgentGenerated)
+    }
+  }, [socket, onSendAssistantMessage, onDiagramGenerated])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (input.trim() && !isLoading && !isGenerating) {
@@ -83,24 +114,9 @@ export function ChatInterface({
       if (isDiagramCommand && diagramId) {
         // Generar diagrama
         socket?.emit("generate-diagram", { prompt: userMessage, diagramId })
-        socket?.on("diagram-generated", (data: { success: boolean; diagram?: any; message?: string; error?: string }) => {
-          setIsGenerating(false) // Desactivar estado de carga
-          if (data.success) {
-            onSendAssistantMessage(`✅ ${data.message}`)
-            if (data.diagram && onDiagramGenerated) {
-              onDiagramGenerated(data.diagram)
-            }
-          } else {
-            onSendAssistantMessage(`❌ ${data.error || 'Error al generar el diagrama'}`)
-          }
-        })
       } else {
         // Chat normal
         socket?.emit("generate-agent", { prompt: userMessage })
-        socket?.on("agent-generated", (data: { text: string }) => {
-          setIsGenerating(false) // Desactivar estado de carga
-          onSendAssistantMessage(data.text) // Renderizar respuesta del agente
-        })
       }
     }
   }

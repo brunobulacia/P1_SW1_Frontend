@@ -136,16 +136,6 @@ export function AppSidebar() {
                   </button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-                <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <button 
-                    onClick={handleSelectAgent}
-                  >
-                    <Bot className="text-lg" />
-                    <span>Agente Inteligente</span>
-                  </button>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
